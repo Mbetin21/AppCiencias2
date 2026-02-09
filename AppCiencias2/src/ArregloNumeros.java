@@ -65,4 +65,10 @@ public class ArregloNumeros {
         }
         return salida;
     }
+    public int getDigitos() {
+    return digitos;
+    }
+    public int getTamaño() {
+        return tamaño;
+    }
 }
