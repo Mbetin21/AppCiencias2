@@ -1,6 +1,9 @@
 import java.awt.*;
 import javax.swing.*;
 
+/**
+ * Ventana principal de la aplicación.
+ */
 public class MainApp extends JFrame {
     private ArregloNumeros arreglo;
     private ConfigPanel configPanel;
@@ -9,6 +12,9 @@ public class MainApp extends JFrame {
     private OperacionesPanel operacionesPanel;
     private ResultadosPanel resultadosPanel;
     
+    /**
+     * Inicializa la UI y los paneles.
+     */
     public MainApp() {
         inicializarArreglo();
         configurarVentana();
@@ -17,13 +23,19 @@ public class MainApp extends JFrame {
         mostrarVentana();
     }
     
+    /**
+     * Crea el arreglo por defecto.
+     */
     private void inicializarArreglo() {
         // Por defecto hasta que el usuario configure
         arreglo = new ArregloNumeros(10, 3);
     }
     
+    /**
+     * Configura la ventana principal.
+     */
     private void configurarVentana() {
-        setTitle("🔍 Algoritmos de Búsqueda - App Profesional");
+        setTitle(" Algoritmos de Búsqueda - App Profesional");
         setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // Centrar en pantalla
@@ -31,6 +43,9 @@ public class MainApp extends JFrame {
         getContentPane().setBackground(new Color(248, 250, 252));
     }
     
+    /**
+     * Crea los paneles de la interfaz.
+     */
     private void crearComponentes() {
         configPanel = new ConfigPanel(this);
         datosPanel = new DatosPanel(this);
@@ -39,6 +54,9 @@ public class MainApp extends JFrame {
         resultadosPanel = new ResultadosPanel(this);
     }
     
+    /**
+     * Organiza los paneles en la ventana.
+     */
     private void organizarLayout() {
         // Panel superior: Configuración
         JPanel northPanel = new JPanel(new BorderLayout());
@@ -58,32 +76,45 @@ public class MainApp extends JFrame {
         add(southPanel, BorderLayout.SOUTH);
     }
     
+    /**
+     * Muestra la ventana.
+     */
     private void mostrarVentana() {
         setVisible(true);
     }
 
+    /**
+     * Actualiza paneles con la configuración actual.
+     */
     public void configurarInfoPaneles(int tamaño, int digitos) {
-    try {
-        datosPanel.actualizarInfoDigitos(digitos);
-        tablaPanel.actualizarTabla();
-    } catch (Exception e) {
-        // Paneles no inicializados aún
-    }
+        try {
+            datosPanel.actualizarInfoDigitos(digitos);
+            tablaPanel.actualizarTabla();
+        } catch (Exception e) {
+            // Paneles no inicializados aún
+        }
     }
     
-    // GETTERS para que otros paneles accedan al arreglo
+    /** Devuelve el arreglo actual. */
     public ArregloNumeros getArreglo() { return arreglo; }
+    /** Refresca la tabla. */
     public void actualizarTabla() { tablaPanel.actualizarTabla(); }
+    /** Muestra un resultado en el panel. */
     public void mostrarResultado(String texto) { resultadosPanel.mostrarResultado(texto); }
     
-    // Método para configurar nuevo arreglo
+    /**
+     * Crea un nuevo arreglo con la configuración indicada.
+     */
     public void configurarArreglo(int tamano, int digitos) {
-    arreglo = new ArregloNumeros(tamano, digitos);
-    configurarInfoPaneles(tamano, digitos);  // ← Nueva línea
-    datosPanel.limpiarCampos();
-    resultadosPanel.limpiar();
-}
+        arreglo = new ArregloNumeros(tamano, digitos);
+        configurarInfoPaneles(tamano, digitos);
+        datosPanel.limpiarCampos();
+        resultadosPanel.limpiar();
+    }
     
+    /**
+     * Punto de entrada de la aplicación.
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new MainApp());
     }

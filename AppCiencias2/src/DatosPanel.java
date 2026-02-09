@@ -1,12 +1,18 @@
 import java.awt.*;
 import javax.swing.*;
 
+/**
+ * Panel para insertar y eliminar números del arreglo.
+ */
 public class DatosPanel extends JPanel {
     private MainApp mainApp;
     private JTextField txtNumero;
     private JButton btnInsertar, btnEliminar;
     private JLabel lblTitulo, lblInstruccion, lblDigitosReq;
     
+    /**
+     * Crea el panel y configura sus componentes.
+     */
     public DatosPanel(MainApp mainApp) {
         this.mainApp = mainApp;
         UIUtils.configurarPanel(this);
@@ -15,9 +21,12 @@ public class DatosPanel extends JPanel {
         agregarListeners();
     }
     
+    /**
+     * Inicializa los componentes visuales.
+     */
     private void inicializarComponentes() {
         // Título
-        lblTitulo = new JLabel("📝 GESTIÓN DE DATOS", SwingConstants.CENTER);
+        lblTitulo = new JLabel("GESTIÓN DE DATOS", SwingConstants.CENTER);
         lblTitulo.setFont(UIUtils.TITULO);
         lblTitulo.setForeground(UIUtils.TEXTO_PRIMARIO);
         
@@ -36,10 +45,13 @@ public class DatosPanel extends JPanel {
         txtNumero.setFont(UIUtils.NORMAL);
         
         // Botones
-        btnInsertar = UIUtils.crearBoton("➕ INSERTAR", UIUtils.BG_BOTON);
-        btnEliminar = UIUtils.crearBoton("🗑️ ELIMINAR", UIUtils.BG_BOTON);
+        btnInsertar = UIUtils.crearBoton("INSERTAR", UIUtils.BG_BOTON);
+        btnEliminar = UIUtils.crearBoton("ELIMINAR", UIUtils.BG_BOTON);
     }
     
+    /**
+     * Organiza los componentes en el panel.
+     */
     private void configurarLayout() {
         setLayout(new BorderLayout());
         
@@ -87,6 +99,9 @@ public class DatosPanel extends JPanel {
         add(formPanel, BorderLayout.SOUTH);
     }
     
+    /**
+     * Registra los listeners de la UI.
+     */
     private void agregarListeners() {
         btnInsertar.addActionListener(e -> insertarNumero());
         btnEliminar.addActionListener(e -> eliminarNumero());
@@ -95,6 +110,9 @@ public class DatosPanel extends JPanel {
         txtNumero.addActionListener(e -> insertarNumero());
     }
     
+    /**
+     * Valida e inserta un número en el arreglo.
+     */
     private void insertarNumero() {
         try {
             String input = txtNumero.getText().trim();
@@ -108,23 +126,26 @@ public class DatosPanel extends JPanel {
             
             int digitosRequeridos = arreglo.getDigitos(); 
             if (!validarDigitos(numero, digitosRequeridos)) {
-                mostrarError("❌ El número debe tener EXACTAMENTE " + digitosRequeridos + " dígitos");
+                mostrarError("El número debe tener EXACTAMENTE " + digitosRequeridos + " dígitos");
                 return;
             }
             
             // Insertar
             arreglo.insertar(numero);
             mainApp.actualizarTabla();
-            mainApp.mostrarResultado("✅ Número " + numero + " insertado correctamente");
+            mainApp.mostrarResultado("Número " + numero + " insertado correctamente");
             txtNumero.setText(""); // Limpiar campo
             
         } catch (NumberFormatException ex) {
-            mostrarError("❌ Ingresa solo números enteros válidos");
+            mostrarError("Ingresa solo números enteros válidos");
         } catch (RuntimeException ex) {
             mostrarError(ex.getMessage());
         }
     }
     
+    /**
+     * Elimina un número del arreglo.
+     */
     private void eliminarNumero() {
         try {
             String input = txtNumero.getText().trim();
@@ -137,31 +158,42 @@ public class DatosPanel extends JPanel {
             ArregloNumeros arreglo = mainApp.getArreglo();
             arreglo.eliminar(numero);
             mainApp.actualizarTabla();
-            mainApp.mostrarResultado("✅ Número " + numero + " eliminado correctamente");
+            mainApp.mostrarResultado("Número " + numero + " eliminado correctamente");
             txtNumero.setText("");
             
         } catch (NumberFormatException ex) {
-            mostrarError("❌ Ingresa solo números enteros válidos");
+            mostrarError("Ingresa solo números enteros válidos");
         }
     }
     
+    /**
+     * Verifica la cantidad de dígitos del número.
+     */
     private boolean validarDigitos(int numero, int digitosRequeridos) {
         // Convierte a string y cuenta dígitos (sin ceros a la izquierda)
         String numStr = String.valueOf(Math.abs(numero));
         return numStr.length() == digitosRequeridos;
     }
     
+    /**
+     * Muestra un mensaje de error.
+     */
     private void mostrarError(String mensaje) {
         JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
         txtNumero.requestFocus();
     }
     
-    // Método público para actualizar info de dígitos cuando se configura
+    /**
+     * Actualiza el texto de dígitos requeridos.
+     */
     public void actualizarInfoDigitos(int digitos) {
         lblDigitosReq.setText("Dígitos requeridos: EXACTAMENTE " + digitos);
         lblDigitosReq.setForeground(UIUtils.TEXTO_PRIMARIO);
     }
     
+    /**
+     * Limpia el campo de entrada.
+     */
     public void limpiarCampos() {
         txtNumero.setText("");
     }

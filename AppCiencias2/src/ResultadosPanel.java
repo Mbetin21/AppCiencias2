@@ -1,6 +1,9 @@
 import java.awt.*;
 import javax.swing.*;
 
+/**
+ * Panel que muestra mensajes de resultados y permite limpiar.
+ */
 public class ResultadosPanel extends JPanel {
     private MainApp mainApp;
     private JLabel lblTitulo;
@@ -8,6 +11,9 @@ public class ResultadosPanel extends JPanel {
     private JButton btnLimpiar;
     private JScrollPane scrollResultados;
     
+    /**
+     * Crea el panel y configura sus componentes.
+     */
     public ResultadosPanel(MainApp mainApp) {
         this.mainApp = mainApp;
         UIUtils.configurarPanel(this);
@@ -16,13 +22,14 @@ public class ResultadosPanel extends JPanel {
         agregarListeners();
     }
     
+    /**
+     * Inicializa los componentes visuales.
+     */
     private void inicializarComponentes() {
-        // Título
-        lblTitulo = new JLabel("📋 RESULTADOS", SwingConstants.CENTER);
+        lblTitulo = new JLabel("RESULTADOS", SwingConstants.CENTER);
         lblTitulo.setFont(UIUtils.TITULO);
         lblTitulo.setForeground(UIUtils.TEXTO_PRIMARIO);
         
-        // Área de resultados (multilínea)
         txtResultados = new JTextArea();
         txtResultados.setFont(new Font("Consolas", Font.PLAIN, 13));
         txtResultados.setEditable(false);
@@ -33,55 +40,55 @@ public class ResultadosPanel extends JPanel {
             BorderFactory.createEmptyBorder(10, 12, 10, 12)
         ));
         
-        // Scroll para resultados
         scrollResultados = new JScrollPane(txtResultados);
         scrollResultados.setBorder(null);
         scrollResultados.setPreferredSize(new Dimension(0, 120));
         scrollResultados.getVerticalScrollBar().setUnitIncrement(10);
         
-        // Botón limpiar
-        btnLimpiar = UIUtils.crearBoton("🧹 LIMPIAR", new Color(107, 114, 128));
+        btnLimpiar = UIUtils.crearBoton("LIMPIAR", new Color(107, 114, 128));
     }
     
+    /**
+     * Organiza los componentes en el panel.
+     */
     private void configurarLayout() {
         setLayout(new BorderLayout(10, 10));
         
-        // Panel superior: Título
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(UIUtils.BG_PRIMARIO);
         topPanel.add(lblTitulo, BorderLayout.NORTH);
         topPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         
-        // Panel central: Scroll de resultados
         add(topPanel, BorderLayout.NORTH);
         add(scrollResultados, BorderLayout.CENTER);
         
-        // Panel inferior: Botón limpiar
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomPanel.setBackground(UIUtils.BG_PRIMARIO);
         bottomPanel.add(btnLimpiar);
         add(bottomPanel, BorderLayout.SOUTH);
     }
     
+    /**
+     * Registra los listeners de la UI.
+     */
     private void agregarListeners() {
         btnLimpiar.addActionListener(e -> limpiar());
     }
     
-    // Método público que llama MainApp
+    /**
+     * Agrega un mensaje a la salida.
+     */
     public void mostrarResultado(String mensaje) {
         String timestamp = java.time.LocalTime.now().format(
             java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")
         );
         String linea = String.format("[%s] %s\n", timestamp, mensaje);
         
-        // Agregar al final
         String contenidoActual = txtResultados.getText();
         txtResultados.setText(contenidoActual + linea);
         
-        // Auto-scroll al final
         txtResultados.setCaretPosition(txtResultados.getDocument().getLength());
         
-        // Cambiar color de fondo temporalmente para destacar
         txtResultados.setBackground(new Color(240, 249, 255));
         new Thread(() -> {
             try {
@@ -95,6 +102,9 @@ public class ResultadosPanel extends JPanel {
         }).start();
     }
     
+    /**
+     * Limpia la salida.
+     */
     public void limpiar() {
         txtResultados.setText("");
         txtResultados.setBackground(new Color(248, 250, 252));

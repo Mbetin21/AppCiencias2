@@ -1,8 +1,10 @@
 import java.awt.*;
 import javax.swing.*;
 
+/**
+ * Utilidades para estilos y componentes de la UI.
+ */
 public class UIUtils {
-    // 🎨 COLORES CONSISTENTES EN TODA LA APP
     public static final Color BG_PRIMARIO = new Color(248, 250, 252);
     public static final Color TEXTO_PRIMARIO = new Color(17, 24, 39);
     public static final Color TEXTO_SECUNDARIO = new Color(51, 65, 85);
@@ -11,18 +13,22 @@ public class UIUtils {
     public static final Color BG_BOTON_SECUNDARIO = new Color(59, 130, 246);
     public static final Color BG_ROJO = new Color(239, 68, 68);
     
-    // 📝 FUENTES CONSISTENTES
     public static final Font TITULO = new Font("Segoe UI", Font.BOLD, 18);
     public static final Font SUBTITULO = new Font("Segoe UI", Font.BOLD, 14);
     public static final Font NORMAL = new Font("Segoe UI", Font.PLAIN, 14);
     public static final Font MUTED = new Font("Segoe UI", Font.ITALIC, 12);
     
-    // 🛠️ CONFIGURACIONES PREDEFINIDAS
+    /**
+     * Aplica estilo base a un panel.
+     */
     public static void configurarPanel(JPanel panel) {
         panel.setBackground(BG_PRIMARIO);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
     }
     
+    /**
+     * Crea un botón con estilo base.
+     */
     public static JButton crearBoton(String texto, Color bgColor) {
         JButton btn = new JButton(texto);
         btn.setFont(SUBTITULO);
@@ -33,6 +39,9 @@ public class UIUtils {
         return btn;
     }
     
+    /**
+     * Aplica estilo base a un campo de texto.
+     */
     public static void aplicarEstiloCampo(JTextField campo) {
         campo.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(229, 231, 235), 2),
