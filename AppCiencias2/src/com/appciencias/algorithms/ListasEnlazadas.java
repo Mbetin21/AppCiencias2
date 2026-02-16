@@ -1,3 +1,4 @@
+package com.appciencias.algorithms;
 
 import java.util.LinkedList;
 

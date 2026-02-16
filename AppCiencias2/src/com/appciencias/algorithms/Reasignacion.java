@@ -1,3 +1,4 @@
+package com.appciencias.algorithms;
 
 /**
  * Formula general:
