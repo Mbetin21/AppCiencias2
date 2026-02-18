@@ -241,6 +241,10 @@ public class BusquedasPanel extends JPanel {
         button.addActionListener(e -> {
             selectMenuButton(button);
             loadContent(action);
+            // Contraer el menú automáticamente después de seleccionar una búsqueda
+            if (sidebarExpanded) {
+                toggleSidebar();
+            }
         });
         
         return button;
