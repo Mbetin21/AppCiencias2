@@ -78,7 +78,7 @@ public class HomePanel extends JPanel {
         
         // Botón Búsquedas Internas
         JButton btnBusquedasInternas = createMainButton(
-            "Búsquedas Internas",
+            "Búsquedas",
             "Algoritmos de búsqueda en estructuras de datos",
             "BUSQUEDAS_INTERNAS"
         );
@@ -88,8 +88,8 @@ public class HomePanel extends JPanel {
         
         // Botón Búsquedas Externas
         JButton btnBusquedasExternas = createMainButton(
-            "Búsquedas Externas",
-            "Algoritmos de búsqueda en archivos y bases de datos",
+            "Grafos",
+            "",
             "BUSQUEDAS_EXTERNAS"
         );
         panel.add(btnBusquedasExternas, gbc);
@@ -116,18 +116,22 @@ public class HomePanel extends JPanel {
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         titleLabel.setForeground(new Color(60, 60, 70));
         
-        // Descripción del botón
-        JLabel descLabel = new JLabel(description);
-        descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        descLabel.setForeground(new Color(100, 100, 110));
+        JLabel descLabel = null;
+        if (description != null && !description.isBlank()) {
+            descLabel = new JLabel(description);
+            descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            descLabel.setForeground(new Color(100, 100, 110));
+        }
         
         // Panel interno para organizar texto
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
         textPanel.setOpaque(false);
         textPanel.add(titleLabel);
-        textPanel.add(Box.createVerticalStrut(8));
-        textPanel.add(descLabel);
+        if (descLabel != null) {
+            textPanel.add(Box.createVerticalStrut(8));
+            textPanel.add(descLabel);
+        }
         
         button.add(textPanel, BorderLayout.CENTER);
         

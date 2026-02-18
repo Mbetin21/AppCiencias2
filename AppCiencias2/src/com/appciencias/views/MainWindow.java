@@ -1,7 +1,7 @@
 package com.appciencias.views;
 
-import javax.swing.*;
 import java.awt.*;
+import javax.swing.*;
 
 /**
  * Ventana principal de la aplicación
@@ -14,8 +14,7 @@ public class MainWindow extends JFrame {
     
     // Referencias a los paneles
     private HomePanel homePanel;
-    private JPanel busquedasInternasPanel;
-    private JPanel busquedasExternasPanel;
+    private BusquedasPanel busquedasPanel;
     
     public MainWindow() {
         initializeWindow();
@@ -45,12 +44,9 @@ public class MainWindow extends JFrame {
         homePanel = new HomePanel(this);
         panelContainer.add(homePanel, "HOME");
         
-        // Preparar espacios para futuros paneles
-        busquedasInternasPanel = createPlaceholderPanel("Búsquedas Internas");
-        busquedasExternasPanel = createPlaceholderPanel("Búsquedas Externas");
-        
-        panelContainer.add(busquedasInternasPanel, "BUSQUEDAS_INTERNAS");
-        panelContainer.add(busquedasExternasPanel, "BUSQUEDAS_EXTERNAS");
+        // Panel de búsquedas
+        busquedasPanel = new BusquedasPanel(this);
+        panelContainer.add(busquedasPanel, "BUSQUEDAS_INTERNAS");
     }
     
     /**
