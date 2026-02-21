@@ -1,22 +1,17 @@
 package com.appciencias.algorithms;
 
+import com.appciencias.models.ClaveUtil;
 import java.util.ArrayList;
 
 /**
- * Solucion de colisiones por ARREGLOS ANIDADOS. Existe un arreglo principal.
- * Cuando hay colisión en la posición D, se crea un ARREGLO NUEVO completo (del
- * mismo tamaño n) y el dato que colisionó va en la posición D de ese nuevo
+ * Solucion de colisiones por arreglos anidados. Existe un arreglo principal.
+ * Cuando hay colisión en la posición X, se crea un arrego nuevo completo (del
+ * mismo tamaño n) y el dato que colisiono va en la posicion X de ese nuevo
  * arreglo.
- *
- * Si luego hay otra colisión en la misma posición D, se crea OTRO arreglo nuevo
- * y el dato va en la posición D de ese tercer arreglo.
- *
- * Así sucesivamente. Se van apilando arreglos, uno por cada colisión que no
- * cabe en los arreglos anteriores.
  */
 public class ArreglosAnidados {
 
-    private ArrayList<String[]> arreglos; // arreglos apilados (índice 0 = principal)
+    private ArrayList<String[]> arreglos; // arreglos apilados (indice 0 = principal)
     private int n;
     private int longClave;
     private int contador;
@@ -45,7 +40,7 @@ public class ArreglosAnidados {
     }
 
     /**
-     * Inserta una clave. Busca el primer arreglo que tenga la posicion D libre.
+     * Inserta una clave. Busca el primer arreglo que tenga la posicion X libre.
      * Si todos la tienen ocupada, crea un arreglo nuevo.
      */
     public void insertar(String clave) {
@@ -64,7 +59,7 @@ public class ArreglosAnidados {
             }
         }
 
-        // Todos ocupados en esa posición -> nuevo arreglo
+        // Todos ocupados en esa posicion, nuevo arreglo
         String[] nuevo = new String[n];
         nuevo[pos] = clave;
         arreglos.add(nuevo);
@@ -72,8 +67,8 @@ public class ArreglosAnidados {
     }
 
     /**
-     * Busca revisando la posicion D en cada arreglo, de arriba hacia abajo. Se
-     * detiene si encuentra una posicion vacía (la clave no puede estar mas
+     * Busca revisando la posicion X en cada arreglo, de arriba hacia abajo. Se
+     * detiene si encuentra una posicion vacia (la clave no puede estar mas
      * abajo).
      *
      * @return ResultadoBusqueda con número de arreglo y posicion, o null si no
@@ -89,7 +84,7 @@ public class ArreglosAnidados {
         for (int i = 0; i < arreglos.size(); i++) {
             String[] arreglo = arreglos.get(i);
             if (arreglo[pos] == null) {
-                return null; // vacío → no existe más abajo
+                return null; // vacio, no existe más abajo
 
             }
             if (arreglo[pos].equals(clave)) {
@@ -122,7 +117,7 @@ public class ArreglosAnidados {
 
     /**
      * Elimina una clave. Despues de eliminar, sube los datos de los arreglos
-     * inferiores en esa posición para no dejar huecos en la cadena de búsqueda.
+     * inferiores en esa posicion para no dejar huecos en la cadena de busqueda.
      */
     public void eliminar(String clave) {
         ClaveUtil.validar(clave, longClave);

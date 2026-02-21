@@ -1,5 +1,6 @@
 package com.appciencias.algorithms;
 
+import com.appciencias.models.ClaveUtil;
 import java.util.ArrayList;
 
 /**
@@ -115,95 +116,68 @@ public class TablaHash {
      * H(k) = (k² mod n) + 1
      */
     private int hashCuadrado(String clave) {
-        long k = ClaveUtil.aNumero(clave);
+        long k = ClaveUtil.aNumero(clave) % 1_000_000L;
         long cuadrado = k * k;
         return (int) (cuadrado % n) + 1;
     }
 
     /**
-     * Truncamiento: extrae los caracteres en las posiciones indicadas, suma sus
-     * valores ASCII y aplica módulo.
-     *
-     * Si el total de posiciones es impar y hay un "centro exacto", el centro se
-     * considera el de la izquierda del par central.
+     * Se trabaja sobre los dígitos del NÚMERO k obtenido de la clave. Se
+     * extraen los dígitos en las posiciones indicadas.
      */
     private int hashTruncamiento(String clave) {
-        if (posicionesTrunc == null || posicionesTrunc.length == 0) {
-            throw new IllegalStateException("No se definieron posiciones para truncamiento.");
-        }
-        long suma = 0;
+        String digitos = ClaveUtil.aDigitos(clave); // dígitos del número k
+        StringBuilder extraido = new StringBuilder();
+
         for (int pos : posicionesTrunc) {
-            if (pos < 1 || pos > clave.length()) {
-                throw new IllegalArgumentException(
-                        "Posicion de truncamiento " + pos + " invalida para clave de " + clave.length() + " caracteres."
-                );
+            if (pos >= 1 && pos <= digitos.length()) {
+                extraido.append(digitos.charAt(pos - 1));
             }
-            suma += (long) clave.charAt(pos - 1); // ASCII del carácter
+            // Si la posición está fuera del rango, se omite silenciosamente
         }
-        return (int) (suma % n) + 1;
+
+        if (extraido.length() == 0) {
+            throw new IllegalStateException(
+                    "Ninguna posicion de truncamiento es valida para la clave '" + clave
+                    + "'. Numero k tiene " + digitos.length() + " digito(s).");
+        }
+
+        long valor = Long.parseLong(extraido.toString());
+        return (int) (valor % n) + 1;
     }
 
     /**
      * Plegamiento: divide la clave en grupos de 2 caracteres.
      *
      * Si la longitud de la clave es IMPAR: El grupo del centro tiene solo 1
-     * carácter (se toma el de la izquierda). Ejemplo: "ABCDE" → grupos: ["AB",
-     * "C", "DE"] (C es el centro izquierdo) se hace de esta forma para mejorar
-     * la forma de agrupar y evitar grupos de 1 carácter al final, que podrian
-     * generar más colisiones.
+     * carácter (se toma el de la izquierda).
      */
     private int hashPlegamiento(String clave) {
-        int len = clave.length();
+        String digitos = ClaveUtil.aDigitos(clave);
+        int len = digitos.length();
 
-        // Dividir en grupos de 2 (el central puede ser 1 si longitud impar)
-        java.util.List<String> grupos = new java.util.ArrayList<>();
-        if (len % 2 == 0) {
-            // Par: grupos normales de 2
-            for (int i = 0; i < len; i += 2) {
-                grupos.add(clave.substring(i, i + 2));
-            }
-        } else {
-            // Impar: mitad izquierda, carácter central, mitad derecha
-            int centro = len / 2; // índice del carácter central
-            // Grupos de la mitad izquierda
-            for (int i = 0; i < centro; i += 2) {
-                int fin = Math.min(i + 2, centro);
-                grupos.add(clave.substring(i, fin));
-            }
-            // Carácter central (solo 1 — el de la izquierda del centro)
-            grupos.add(String.valueOf(clave.charAt(centro)));
-            // Grupos de la mitad derecha
-            for (int i = centro + 1; i < len; i += 2) {
-                int fin = Math.min(i + 2, len);
-                grupos.add(clave.substring(i, fin));
-            }
+        // Dividir en grupos de 2 digitos (de izquierda a derecha)
+        ArrayList<Long> grupos = new ArrayList<>();
+        for (int i = 0; i < len; i += 2) {
+            int fin = Math.min(i + 2, len);
+            grupos.add(Long.parseLong(digitos.substring(i, fin)));
         }
 
-        // Calcular valor ASCII de cada grupo
-        long[] valoresGrupos = new long[grupos.size()];
-        for (int i = 0; i < grupos.size(); i++) {
-            long suma = 0;
-            for (char c : grupos.get(i).toCharArray()) {
-                suma += (long) c;
-            }
-            valoresGrupos[i] = suma;
-        }
-
-        // Combinar grupos: suma o multiplicacion
+        // Combinar grupos
         long resultado;
         if (tipoPlegamiento == TipoPlegamiento.SUMA) {
             resultado = 0;
-            for (long v : valoresGrupos) {
-                resultado += v;
+            for (long g : grupos) {
+                resultado += g;
             }
-        } else {
+        } else { // MULTIPLICACION
             resultado = 1;
-            for (long v : valoresGrupos) {
-                resultado *= v;
+            for (long g : grupos) {
+                // Evitar multiplicar por 0 si un grupo es "00"
+                resultado *= (g == 0 ? 1 : g);
             }
         }
 
-        // Solo digitos menos significativos
         return (int) (resultado % n) + 1;
     }
 

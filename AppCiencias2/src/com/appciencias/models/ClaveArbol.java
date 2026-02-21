@@ -1,4 +1,4 @@
-package com.appciencias.algorithms;
+package com.appciencias.models;
 
 /**
  * Conversión de letras para los árboles (Digital, Trie, Múltiple).

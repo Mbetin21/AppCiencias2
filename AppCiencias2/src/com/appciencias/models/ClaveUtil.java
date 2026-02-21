@@ -1,4 +1,4 @@
-package com.appciencias.algorithms;
+package com.appciencias.models;
 
 /**
  * Utilidad para convertir claves alfanuméricas a número. Usada para: Hash,
@@ -24,6 +24,18 @@ public class ClaveUtil {
             resultado = resultado * 1000L + (long) c;
         }
         return resultado;
+    }
+
+    /**
+     * Convierte una clave a su representación numérica como cadena de digitos.
+     * Usada Truncamiento y Plegamiento que trabajan sobre los digitos del
+     * numero.
+     *
+     * @param clave Clave alfanumerica
+     * @return String con los digitos del número equivalente
+     */
+    public static String aDigitos(String clave) {
+        return String.valueOf(aNumero(clave));
     }
 
     /**
