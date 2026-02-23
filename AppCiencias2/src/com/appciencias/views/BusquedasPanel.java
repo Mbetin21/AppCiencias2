@@ -14,6 +14,7 @@ public class BusquedasPanel extends JPanel {
     private JPanel sidebarPanel;
     private JPanel contentPanel;
     private boolean sidebarExpanded = true;
+    private SecuencialPanel secuencialPanel;
     
     // Colores consistentes con el resto de la aplicación
     private final Color BACKGROUND_COLOR = new Color(245, 245, 250);
@@ -309,6 +310,8 @@ public class BusquedasPanel extends JPanel {
         contentPanel = new JPanel(new BorderLayout());
         contentPanel.setBackground(BACKGROUND_COLOR);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
+        secuencialPanel = new SecuencialPanel();
         
         // Cargar contenido por defecto
         loadContent("secuencial");
@@ -326,7 +329,7 @@ public class BusquedasPanel extends JPanel {
         
         switch (contentType) {
             case "secuencial":
-                content = createSecuencialContent();
+                content = secuencialPanel;
                 break;
             case "binaria":
                 content = createBinariaContent();
