@@ -23,6 +23,7 @@ public class BinarioPanel extends JPanel {
     private final Color BUTTON_DISABLED_COLOR = new Color(220, 220, 220);
     private final Color HIGHLIGHT_COLOR = new Color(210, 225, 245);
     private final Color HIGHLIGHT_FOUND_COLOR = new Color(205, 235, 210);
+    private final Color HIGHLIGHT_DELETE_COLOR = new Color(255, 220, 220);
 
     private Secuencial secuencial;
     private boolean isTableOrdered = false;
@@ -220,7 +221,7 @@ public class BinarioPanel extends JPanel {
         panel.add(fullLabel);
         panel.add(Box.createVerticalStrut(8));
 
-        sortWarningLabel = new JLabel("⚠ Para realizar búsqueda o eliminación, la tabla debe estar ordenada.");
+        sortWarningLabel = new JLabel("Para realizar búsqueda o eliminación, la tabla debe estar ordenada.");
         sortWarningLabel.setFont(new Font("Segoe UI", Font.ITALIC, 13));
         sortWarningLabel.setForeground(new Color(200, 120, 0));
         sortWarningLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -510,16 +511,7 @@ public class BinarioPanel extends JPanel {
         }
 
         String finalClave = clave;
-        try {
-            secuencial.eliminar(finalClave);
-            isTableOrdered = false;
-            orderedData = null;
-            setStatus("Clave '" + finalClave + "' eliminada.", false);
-            refreshTable();
-            updateControlsState();
-        } catch (IllegalArgumentException ex) {
-            setStatus("Error: " + ex.getMessage(), true);
-        }
+        startBinarySearchAnimationDelete(finalClave);
     }
 
     private void handleRestart() {
@@ -645,6 +637,138 @@ public class BinarioPanel extends JPanel {
                 }
                 animationRunning = false;
                 setActionButtonsEnabled(true);
+                return;
+            }
+
+            clearHighlights();
+            BinarySearchStep step = steps.get(currentStep[0]);
+            
+            // Resaltar el rango de búsqueda (izquierda y derecha)
+            for (int i = step.left; i <= step.right && i < originalIndices.size(); i++) {
+                int originalIndex = originalIndices.get(i);
+                if (originalIndex < rowPanels.size()) {
+                    rowPanels.get(originalIndex).setHighlight(true, HIGHLIGHT_COLOR);
+                }
+            }
+            
+            // Resaltar el elemento del medio en color más enfocado
+            if (step.mid < originalIndices.size()) {
+                int originalMidIndex = originalIndices.get(step.mid);
+                if (originalMidIndex < rowPanels.size()) {
+                    rowPanels.get(originalMidIndex).setHighlight(true, new Color(100, 150, 255));
+                }
+            }
+
+            setStatus("Paso " + (currentStep[0] + 1) + ": Comparando con '" + sortedData[step.mid] 
+                    + "' (evaluando posiciones " + step.left + " a " + step.right + ")", false);
+            
+            currentStep[0]++;
+        });
+        animationTimer.start();
+    }
+
+    /**
+     * Búsqueda binaria con animación que termina eliminando el elemento encontrado
+     */
+    private void startBinarySearchAnimationDelete(String clave) {
+        if (animationRunning) {
+            return;
+        }
+
+        animationRunning = true;
+        setActionButtonsEnabled(false);
+        clearHighlights();
+
+        // Obtener datos ordenados
+        ArrayList<String> datos = secuencial.obtenerDatos();
+        String[] sortedData = datos.toArray(new String[0]);
+
+        // Crear mapeo de índices ordenados a índices originales
+        java.util.List<Integer> originalIndices = new java.util.ArrayList<>();
+        java.util.List<String> sortedDatos = new java.util.ArrayList<>(datos);
+        sortedDatos.sort(String::compareTo);
+        for (String valor : sortedDatos) {
+            for (int i = 0; i < datos.size(); i++) {
+                if (datos.get(i).equals(valor) && !originalIndices.contains(i)) {
+                    originalIndices.add(i);
+                    break;
+                }
+            }
+        }
+
+        // Almacenar los pasos de la búsqueda binaria
+        java.util.List<BinarySearchStep> steps = new java.util.ArrayList<>();
+        int left = 0, right = sortedData.length - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            int cmp = sortedData[mid].compareTo(clave);
+            steps.add(new BinarySearchStep(left, right, mid, cmp == 0));
+
+            if (cmp == 0) {
+                break;
+            } else if (cmp < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        if (steps.isEmpty() || !steps.get(steps.size() - 1).found) {
+            setStatus("Clave '" + clave + "' no encontrada.", true);
+            animationRunning = false;
+            setActionButtonsEnabled(true);
+            return;
+        }
+
+        // Reproducir pasos con animación
+        final int[] currentStep = {0};
+        animationTimer = new Timer(600, null);
+        animationTimer.addActionListener(e -> {
+            if (currentStep[0] >= steps.size()) {
+                animationTimer.stop();
+                
+                // Mostrar resalte en rojo antes de eliminar
+                clearHighlights();
+                
+                // Encontrar índice del elemento a eliminar
+                int deleteIndex = -1;
+                for (int i = 0; i < datos.size(); i++) {
+                    if (datos.get(i).equals(clave)) {
+                        deleteIndex = i;
+                        break;
+                    }
+                }
+                
+                if (deleteIndex != -1) {
+                    highlightPosition(deleteIndex, HIGHLIGHT_DELETE_COLOR);
+                    setStatus("Elemento encontrado: '" + clave + "'. Eliminando...", false);
+                    
+                    // Esperar 800ms antes de eliminar
+                    Timer deleteTimer = new Timer(800, null);
+                    deleteTimer.addActionListener(deleteAction -> {
+                        deleteTimer.stop();
+                        try {
+                            clearHighlights();
+                            secuencial.eliminar(clave);
+                            isTableOrdered = false;
+                            orderedData = null;
+                            refreshTable();
+                            updateControlsState();
+                            setStatus("Clave '" + clave + "' encontrada y eliminada en " + (currentStep[0]) + " pasos.", false);
+                        } catch (IllegalArgumentException ex) {
+                            setStatus("Error al eliminar: " + ex.getMessage(), true);
+                        }
+                        animationRunning = false;
+                        setActionButtonsEnabled(true);
+                    });
+                    deleteTimer.setRepeats(false);
+                    deleteTimer.start();
+                } else {
+                    setStatus("Error: No se pudo encontrar el elemento.", true);
+                    animationRunning = false;
+                    setActionButtonsEnabled(true);
+                }
                 return;
             }
 
