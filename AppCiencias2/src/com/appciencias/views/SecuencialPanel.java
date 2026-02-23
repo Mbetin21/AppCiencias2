@@ -342,15 +342,21 @@ public class SecuencialPanel extends JPanel {
             return;
         }
 
-        // Validar longitud y rellenar con ceros a la izquierda si es necesario
+        // Validar longitud y rellenar con ceros a la izquierda si es necesario (solo para números)
         if (clave.length() > secuencial.getLongClave()) {
             setStatus("La clave no puede exceder " + secuencial.getLongClave() + " carácter(es).", true);
             return;
         }
 
-        // Rellenar con ceros a la izquierda si es más corta
+        // Rellenar con ceros a la izquierda si es más corta (solo si es numérica)
         if (clave.length() < secuencial.getLongClave()) {
-            clave = String.format("%0" + secuencial.getLongClave() + "d", Long.parseLong(clave));
+            try {
+                clave = String.format("%0" + secuencial.getLongClave() + "d", Long.parseLong(clave));
+            } catch (NumberFormatException e) {
+                // Si no es numérica, requiere la longitud exacta
+                setStatus("La clave debe tener exactamente " + secuencial.getLongClave() + " carácter(es).", true);
+                return;
+            }
         }
 
         String finalClave = clave;
@@ -387,9 +393,20 @@ public class SecuencialPanel extends JPanel {
             return;
         }
 
-        // Rellenar con ceros si es necesario para búsqueda
+        // Validar longitud y rellenar con ceros si es necesario (solo para números)
+        if (clave.length() > secuencial.getLongClave()) {
+            setStatus("La clave no puede exceder " + secuencial.getLongClave() + " carácter(es).", true);
+            return;
+        }
+
         if (clave.length() < secuencial.getLongClave()) {
-            clave = String.format("%0" + secuencial.getLongClave() + "d", Long.parseLong(clave));
+            try {
+                clave = String.format("%0" + secuencial.getLongClave() + "d", Long.parseLong(clave));
+            } catch (NumberFormatException e) {
+                // Si no es numérica, requiere la longitud exacta
+                setStatus("La clave debe tener exactamente " + secuencial.getLongClave() + " carácter(es).", true);
+                return;
+            }
         }
 
         String finalClave = clave;
@@ -418,9 +435,20 @@ public class SecuencialPanel extends JPanel {
             return;
         }
 
-        // Rellenar con ceros si es necesario para búsqueda
+        // Validar longitud y rellenar con ceros si es necesario (solo para números)
+        if (clave.length() > secuencial.getLongClave()) {
+            setStatus("La clave no puede exceder " + secuencial.getLongClave() + " carácter(es).", true);
+            return;
+        }
+
         if (clave.length() < secuencial.getLongClave()) {
-            clave = String.format("%0" + secuencial.getLongClave() + "d", Long.parseLong(clave));
+            try {
+                clave = String.format("%0" + secuencial.getLongClave() + "d", Long.parseLong(clave));
+            } catch (NumberFormatException e) {
+                // Si no es numérica, requiere la longitud exacta
+                setStatus("La clave debe tener exactamente " + secuencial.getLongClave() + " carácter(es).", true);
+                return;
+            }
         }
 
         String finalClave = clave;
