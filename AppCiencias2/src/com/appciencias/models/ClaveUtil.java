@@ -1,45 +1,44 @@
 package com.appciencias.models;
 
-/**
- * Utilidad para convertir claves alfanuméricas a número. Usada para: Hash,
- * Secuencial, Binario.
- *
- * Suma ponderada de valores ASCII de cada carácter. Ejemplo: "AB3" -> (65 *
- * 1000²) + (66 * 1000¹) + (51 * 1000⁰)
- */
 public class ClaveUtil {
 
     /**
-     * Convierte una clave alfanumérica a long usando valores ASCII.
+     * Convierte una clave a su valor numérico k.
      *
-     * @param clave Clave (letras, números o mezcla)
-     * @return Valor numérico largo equivalente
+     * @param clave Clave (solo números, solo letras, o alfanumerica)
+     * @return Valor numérico k (siempre >= 0)
      */
     public static long aNumero(String clave) {
         if (clave == null || clave.isEmpty()) {
             throw new IllegalArgumentException("La clave no puede ser vacia.");
         }
-        long resultado = 0;
-        for (char c : clave.toCharArray()) {
-            resultado = resultado * 1000L + (long) c;
+
+        if (esNumerica(clave)) {
+            // Clave numérica pura, usa el valor directamente
+            return Long.parseLong(clave);
+        } else {
+            // Letras o alfanumerico, suma simple de valores ASCII
+            long suma = 0;
+            for (char c : clave.toCharArray()) {
+                suma += (long) c;
+            }
+            return suma;
         }
-        return resultado;
     }
 
     /**
-     * Convierte una clave a su representación numérica como cadena de digitos.
-     * Usada Truncamiento y Plegamiento que trabajan sobre los digitos del
-     * numero.
+     * Convierte una clave a su representación numerica como cadena de digitos.
+     * Usada por Truncamiento y Plegamiento.
      *
-     * @param clave Clave alfanumerica
-     * @return String con los digitos del número equivalente
+     * @param clave Clave alfanumérica
+     * @return String con los dígitos del número equivalente
      */
     public static String aDigitos(String clave) {
         return String.valueOf(aNumero(clave));
     }
 
     /**
-     * Valida longitud de la clave.
+     * Valida que la clave tenga exactamente la longitud esperada.
      *
      * @param clave Clave a validar
      * @param longitud Longitud esperada
@@ -54,5 +53,20 @@ public class ClaveUtil {
                     + " caracter(es). Tiene " + clave.length() + "."
             );
         }
+    }
+
+    /**
+     * Verifica si una cadena es completamente numérica (solo degitos).
+     */
+    public static boolean esNumerica(String clave) {
+        if (clave == null || clave.isEmpty()) {
+            return false;
+        }
+        for (char c : clave.toCharArray()) {
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

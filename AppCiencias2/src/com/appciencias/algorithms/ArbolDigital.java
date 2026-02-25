@@ -4,18 +4,17 @@ import com.appciencias.models.ClaveArbol;
 import java.util.ArrayList;
 
 /**
- * Arbol digital - Cada clave es UNA letra (a-z). - Conversión: letra, posición
- * alfabética (a=1…z=26), 5 bits binarios. Bit '1' = rama derecha, Bit '0' =
- * rama izquierda.
+ * Arbol Digital
  *
- * clave → letra guardada (null = nodo vacío / no existe aún) izquierda → hijo
- * por bit '0' derecha → hijo por bit '1'
+ * - Cada clave es UNA letra (a-z / A-Z). - la letra tiene una posicion
+ * alfabética (a=1…z=26), son 5 bits binarios. Bit '1' = rama derecha, Bit '0' =
+ * rama izquierda.
  */
 public class ArbolDigital {
 
     public static class Nodo {
 
-        public String clave;       // null = nodo vacio
+        public String clave;
         public Nodo izquierda;
         public Nodo derecha;
 
@@ -27,16 +26,18 @@ public class ArbolDigital {
     }
 
     private Nodo raiz;
-    private int contador; // claves insertadas
+    private ArrayList<String> historial; // orden original de insercion
+    private int contador;
 
     public ArbolDigital() {
         this.raiz = null;
+        this.historial = new ArrayList<>();
         this.contador = 0;
     }
 
-    // ── INSERTAR ─────────────────────────────────────────────────────────────
     /**
-     * Inserta una letra en el árbol digital.
+     * Inserta una letra en el arbol digital. Siempre recorre los bits
+     * completos.
      *
      * @throws IllegalArgumentException si la clave no es una letra a-z
      * @throws IllegalStateException si la clave ya existe
@@ -49,49 +50,37 @@ public class ArbolDigital {
             throw new IllegalStateException("La clave '" + clave + "' ya existe en el arbol.");
         }
 
-        String bits = ClaveArbol.claveABinario(clave); // 5 bits
+        insertarEnArbol(clave);
+        historial.add(clave);
+        contador++;
+    }
 
-        // CASO 1: arbol vacio enonces la clave va en la raiz
+    /**
+     * Inserta fisicamente en el arbol sin tocar el historial. Usado tanto por
+     * insertar() como por reconstruir().
+     */
+    private void insertarEnArbol(String clave) {
+        String bits = ClaveArbol.claveABinario(clave);
+
+        // Arbol vacio, la clave va en la raiz
         if (raiz == null) {
             raiz = new Nodo(clave);
-            contador++;
             return;
         }
 
-        // CASO 2: raiz vacia (existe el nodo pero sin dato) → guardar aqui
-        if (raiz.clave == null) {
-            raiz.clave = clave;
-            contador++;
-            return;
-        }
-
-        // CASO 3: raiz ocupada, recorrer el arbol bit a bit
+        // Recorrer bit a bit para insertar
         Nodo actual = raiz;
         for (int i = 0; i < bits.length(); i++) {
             char bit = bits.charAt(i);
             if (bit == '1') {
-                // Ir a la derecha
                 if (actual.derecha == null) {
                     actual.derecha = new Nodo(clave);
-                    contador++;
-                    return;
-                }
-                if (actual.derecha.clave == null) {
-                    actual.derecha.clave = clave;
-                    contador++;
                     return;
                 }
                 actual = actual.derecha;
             } else {
-                // Ir a la izquierda
                 if (actual.izquierda == null) {
                     actual.izquierda = new Nodo(clave);
-                    contador++;
-                    return;
-                }
-                if (actual.izquierda.clave == null) {
-                    actual.izquierda.clave = clave;
-                    contador++;
                     return;
                 }
                 actual = actual.izquierda;
@@ -102,29 +91,22 @@ public class ArbolDigital {
     }
 
     /**
-     * Busca una letra en el arbol siguiendo los mismos bits que insertar.
+     * Busca una letra en el arbol siguiendo sus bits.
      *
      * @return true si existe, false si no
      */
     public boolean buscar(String clave) {
-        return buscarNodo(clave) != null;
-    }
-
-    /**
-     * Retorna el nodo donde esta la clave, o null si no existe. Principalmente
-     * esto es para eliminar.
-     */
-    private Nodo buscarNodo(String clave) {
+        if (clave == null || clave.isEmpty()) {
+            return false;
+        }
         ClaveArbol.validar(clave);
         clave = clave.toUpperCase();
 
         if (raiz == null) {
-            return null;
+            return false;
         }
-
-        // Verificar raíz
         if (raiz.clave != null && raiz.clave.equals(clave)) {
-            return raiz;
+            return true;
         }
 
         String bits = ClaveArbol.claveABinario(clave);
@@ -132,48 +114,68 @@ public class ArbolDigital {
 
         for (int i = 0; i < bits.length(); i++) {
             char bit = bits.charAt(i);
-            if (bit == '1') {
-                actual = actual.derecha;
-            } else {
-                actual = actual.izquierda;
-            }
+            actual = (bit == '1') ? actual.derecha : actual.izquierda;
             if (actual == null) {
-                return null;
+                return false;
             }
             if (actual.clave != null && actual.clave.equals(clave)) {
-                return actual;
+                return true;
             }
         }
-        return null;
+        return false;
     }
 
     /**
-     * Elimina una clave del arbol. El nodo queda con clave = null (nodo vacio),
-     * las ramas se conservan para no romper el camino de otras claves.
+     * Elimina una clave y reestructura el arbol completo.
+     *
+     * Proceso: 1. Verificar que la clave existe. 2. Quitarla del historial de
+     * insercion. 3. Reconstruir el arbol desde cero con las claves restantes en
+     * el mismo orden original.
      *
      * @throws IllegalArgumentException si la clave no existe
      */
     public void eliminar(String clave) {
-        Nodo nodo = buscarNodo(clave);
-        if (nodo == null) {
-            throw new IllegalArgumentException("La clave '" + clave.toUpperCase() + "' no existe.");
+        ClaveArbol.validar(clave);
+        clave = clave.toUpperCase();
+
+        if (!buscar(clave)) {
+            throw new IllegalArgumentException("La clave '" + clave + "' no existe en el arbol.");
         }
-        nodo.clave = null;
+
+        historial.remove(clave);
         contador--;
+        reconstruir();
     }
 
     /**
-     * Retorna la raíz del arbol.
+     * Reconstruye el arbol desde cero usando el historial actual.
+     */
+    private void reconstruir() {
+        raiz = null;
+        for (String c : historial) {
+            insertarEnArbol(c);
+        }
+    }
+
+    /**
+     * Retorna la raiz
      */
     public Nodo getRaiz() {
         return raiz;
     }
 
     /**
-     * Lista de todas las claves activas en orden de insercion (recorrido
-     * inorden).
+     * Lista de claves en el orden en que fueron insertadas.
      */
     public ArrayList<String> obtenerClaves() {
+        return new ArrayList<>(historial);
+    }
+
+    /**
+     * Recorrido inorden (para mostrar claves en orden alfabético si se desea)
+     * puro desparche si se pone pero quien sabe con que salga ese señor
+     */
+    public ArrayList<String> obtenerClavesInorden() {
         ArrayList<String> lista = new ArrayList<>();
         inorden(raiz, lista);
         return lista;
@@ -191,7 +193,7 @@ public class ArbolDigital {
     }
 
     /**
-     * Retorna la representacion binaria de una clave
+     * Info de conversion de una clave.
      */
     public String obtenerInfo(String clave) {
         return ClaveArbol.obtenerInfo(clave);
