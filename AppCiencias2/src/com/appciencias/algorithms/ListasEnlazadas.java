@@ -1,11 +1,11 @@
 package com.appciencias.algorithms;
 
+import com.appciencias.models.ClaveUtil;
 import java.util.ArrayList;
 
-import com.appciencias.models.ClaveUtil;
-
 /**
- * Solucion dee colisiones por listas enlazadas.
+ * Solución de colisiones por listas enlazadas.
+ * Ahora soporta cualquier función hash (MOD, CUADRADO, TRUNCAMIENTO, PLEGAMIENTO).
  */
 public class ListasEnlazadas {
 
@@ -29,12 +29,17 @@ public class ListasEnlazadas {
     private int n;
     private int longClave;
     private int contador; // total de claves activas (tabla + cadenas)
+    private FuncionHash funcionHashObj; // Función hash configurable
 
     /**
-     * @param tamaño Numero de posiciones de la tabla
+     * Constructor principal con función hash configurable.
+     * Permite usar cualquier tipo de función hash.
+     * 
+     * @param tamaño Número de posiciones de la tabla
      * @param longClave Cantidad de caracteres por clave
+     * @param funcionHash Instancia de FuncionHash configurada
      */
-    public ListasEnlazadas(int tamaño, int longClave) {
+    public ListasEnlazadas(int tamaño, int longClave, FuncionHash funcionHash) {
         if (tamaño <= 0) {
             throw new IllegalArgumentException("El tamaño debe ser mayor que 0.");
         }
@@ -43,17 +48,29 @@ public class ListasEnlazadas {
         }
         this.n = tamaño;
         this.longClave = longClave;
+        this.funcionHashObj = funcionHash;
         this.contador = 0;
         this.tabla = new String[n];    // null = vacia
         this.cadena = new NodoLista[n]; // null = sin cadena
     }
 
     /**
-     * H(k) = (k mod n) + 1 Internamente se usa indice 0-based (posiciin - 1).
+     * Constructor con función hash por defecto (MOD) - retrocompatibilidad.
+     * 
+     * @param tamaño Número de posiciones de la tabla
+     * @param longClave Cantidad de caracteres por clave
+     */
+    public ListasEnlazadas(int tamaño, int longClave) {
+        this(tamaño, longClave, new FuncionHash(FuncionHash.Tipo.MOD, tamaño));
+    }
+
+    /**
+     * Calcula el hash usando la función configurada.
+     * Retorna índice 0-based.
      */
     private int hash(String clave) {
-        long k = ClaveUtil.aNumero(clave);
-        return (int) (k % n); // 0-based
+        int posicion1Based = funcionHashObj.calcular(clave);
+        return posicion1Based - 1; // Convertir a 0-based
     }
 
     /**
@@ -290,5 +307,9 @@ public class ListasEnlazadas {
 
     public int getContador() {
         return contador;
+    }
+
+    public FuncionHash getFuncionHash() {
+        return funcionHashObj;
     }
 }

@@ -4,10 +4,12 @@ import com.appciencias.models.ClaveUtil;
 import java.util.ArrayList;
 
 /**
- * Solucion de colisiones por arreglos anidados. Existe un arreglo principal.
- * Cuando hay colisión en la posición X, se crea un arrego nuevo completo (del
- * mismo tamaño n) y el dato que colisiono va en la posicion X de ese nuevo
- * arreglo.
+ * Solución de colisiones por arreglos anidados. 
+ * Existe un arreglo principal. Cuando hay colisión en la posición X, se crea 
+ * un arreglo nuevo completo (del mismo tamaño n) y el dato que colisionó va 
+ * en la posición X de ese nuevo arreglo.
+ * 
+ * Ahora soporta cualquier función hash (MOD, CUADRADO, TRUNCAMIENTO, PLEGAMIENTO).
  */
 public class ArreglosAnidados {
 
@@ -15,12 +17,17 @@ public class ArreglosAnidados {
     private int n;
     private int longClave;
     private int contador;
+    private FuncionHash funcionHashObj; // Función hash configurable
 
     /**
+     * Constructor principal con función hash configurable.
+     * Permite usar cualquier tipo de función hash.
+     * 
      * @param tamaño Tamaño de cada arreglo
      * @param longClave Caracteres por clave
+     * @param funcionHash Instancia de FuncionHash configurada
      */
-    public ArreglosAnidados(int tamaño, int longClave) {
+    public ArreglosAnidados(int tamaño, int longClave, FuncionHash funcionHash) {
         if (tamaño <= 0) {
             throw new IllegalArgumentException("El tamaño debe ser mayor que 0.");
         }
@@ -29,14 +36,29 @@ public class ArreglosAnidados {
         }
         this.n = tamaño;
         this.longClave = longClave;
+        this.funcionHashObj = funcionHash;
         this.contador = 0;
         this.arreglos = new ArrayList<>();
         arreglos.add(new String[n]); // arreglo principal
     }
 
+    /**
+     * Constructor con función hash por defecto (MOD) - retrocompatibilidad.
+     * 
+     * @param tamaño Tamaño de cada arreglo
+     * @param longClave Caracteres por clave
+     */
+    public ArreglosAnidados(int tamaño, int longClave) {
+        this(tamaño, longClave, new FuncionHash(FuncionHash.Tipo.MOD, tamaño));
+    }
+
+    /**
+     * Calcula el hash usando la función configurada.
+     * Retorna índice 0-based.
+     */
     private int hash(String clave) {
-        long k = ClaveUtil.aNumero(clave);
-        return (int) (k % n); // 0-based internamente
+        int posicion1Based = funcionHashObj.calcular(clave);
+        return posicion1Based - 1; // Convertir a 0-based
     }
 
     /**
@@ -205,5 +227,9 @@ public class ArreglosAnidados {
 
     public int getContador() {
         return contador;
+    }
+
+    public FuncionHash getFuncionHash() {
+        return funcionHashObj;
     }
 }
