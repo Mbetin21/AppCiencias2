@@ -4,16 +4,23 @@ import com.appciencias.models.ClaveUtil;
 import java.util.ArrayList;
 
 /**
- * MOD -> H(k) = (k mod n) + 1 CUADRADO -> H(k) = (k² mod n) + 1 TRUNCAMIENTO ->
- * extrae posiciones específicas de la clave, suma sus ASCII, aplica mod
- * PLEGAMIENTO -> divide en grupos de 2, suma o multiplica grupos, aplica mod
+ * Tabla Hash con direccionamiento abierto.
+ * 
+ * Funciones Hash disponibles (delegadas a FuncionHash):
+ * - MOD: H(k) = (k mod n) + 1
+ * - CUADRADO: H(k) = (k² mod n) + 1
+ * - TRUNCAMIENTO: Extrae posiciones específicas
+ * - PLEGAMIENTO: Divide en grupos y los combina
  *
- * Solucion de las colisiones LINEAL -> D' = D + i (donde i = 1, 2, 3...)
- * CUADRATICA -> D' = D + i² (i = 1, 2, 3...) DOBLE_HASH -> D' = D + i * H2(k)
- * con H2(k) = 1 + (k mod (n-1)) (No la entendi bien se lo pedi a la IA)
+ * Solución de colisiones:
+ * - LINEAL: D' = D + i (donde i = 1, 2, 3...)
+ * - CUADRATICA: D' = D + i² (i = 1, 2, 3...)
+ * - DOBLE_HASH: D' = D + i * H2(k) con H2(k) = 1 + (k mod (n-1))
  */
 public class TablaHash {
 
+    // Enums mantenidos por retrocompatibilidad con código existente
+    @Deprecated
     public enum FuncionHash {
         MOD, CUADRADO, TRUNCAMIENTO, PLEGAMIENTO
     }
@@ -22,6 +29,7 @@ public class TablaHash {
         LINEAL, CUADRATICA, DOBLE_HASH
     }
 
+    @Deprecated
     public enum TipoPlegamiento {
         SUMA, MULTIPLICACION
     }
@@ -34,18 +42,27 @@ public class TablaHash {
     private int longClave;    // caracteres por clave
     private int contador;     // elementos activos
 
-    private FuncionHash funcionHash;
+    private com.appciencias.algorithms.FuncionHash funcionHashObj; // Nueva clase centralizada
     private TipoColision tipoColision;
 
-    // Para TRUNCAMIENTO
-    private int[] posicionesTrunc;   // posiciones (1-based) a extraer
-
-    // Para PLEGAMIENTO
-    private TipoPlegamiento tipoPlegamiento; // SUMA o MULTIPLICACION
+    /**
+     * Constructor principal que acepta una instancia de FuncionHash.
+     * Permite cualquier tipo de función hash configurada externamente.
+     */
+    public TablaHash(int tamaño, int longClave, com.appciencias.algorithms.FuncionHash funcionHash, TipoColision tipoColision) {
+        validarBase(tamaño, longClave);
+        this.n = tamaño;
+        this.longClave = longClave;
+        this.funcionHashObj = funcionHash;
+        this.tipoColision = tipoColision;
+        this.tabla = new String[n];
+    }
 
     /**
-     * Constructor para MOD o CUADRADO.
+     * Constructor para MOD o CUADRADO (retrocompatibilidad).
+     * @deprecated Use el constructor con FuncionHash object
      */
+    @Deprecated
     public TablaHash(int tamaño, int longClave, FuncionHash funcionHash, TipoColision tipoColision) {
         validarBase(tamaño, longClave);
         if (funcionHash == FuncionHash.TRUNCAMIENTO || funcionHash == FuncionHash.PLEGAMIENTO) {
@@ -53,132 +70,56 @@ public class TablaHash {
         }
         this.n = tamaño;
         this.longClave = longClave;
-        this.funcionHash = funcionHash;
+        // Convertir enum antiguo a nueva clase FuncionHash
+        com.appciencias.algorithms.FuncionHash.Tipo tipo = 
+            (funcionHash == FuncionHash.MOD) ? com.appciencias.algorithms.FuncionHash.Tipo.MOD 
+                                             : com.appciencias.algorithms.FuncionHash.Tipo.CUADRADO;
+        this.funcionHashObj = new com.appciencias.algorithms.FuncionHash(tipo, tamaño);
         this.tipoColision = tipoColision;
         this.tabla = new String[n];
     }
 
     /**
-     * Constructor para TRUNCAMIENTO.
+     * Constructor para TRUNCAMIENTO (retrocompatibilidad).
      *
      * @param posicionesTrunc Posiciones (1-based) de la clave a extraer.
+     * @deprecated Use el constructor con FuncionHash object
      */
+    @Deprecated
     public TablaHash(int tamaño, int longClave, TipoColision tipoColision, int[] posicionesTrunc) {
         validarBase(tamaño, longClave);
         this.n = tamaño;
         this.longClave = longClave;
-        this.funcionHash = FuncionHash.TRUNCAMIENTO;
+        this.funcionHashObj = new com.appciencias.algorithms.FuncionHash(tamaño, posicionesTrunc);
         this.tipoColision = tipoColision;
-        this.posicionesTrunc = posicionesTrunc;
         this.tabla = new String[n];
     }
 
     /**
-     * Constructor para PLEGAMIENTO. Divide la clave en grupos de 2 caracteres.
+     * Constructor para PLEGAMIENTO. Divide la clave en grupos de 2 caracteres (retrocompatibilidad).
      *
      * @param tipoPlegamiento SUMA o MULTIPLICACION entre grupos
+     * @deprecated Use el constructor con FuncionHash object
      */
+    @Deprecated
     public TablaHash(int tamaño, int longClave, TipoColision tipoColision, TipoPlegamiento tipoPlegamiento) {
         validarBase(tamaño, longClave);
         this.n = tamaño;
         this.longClave = longClave;
-        this.funcionHash = FuncionHash.PLEGAMIENTO;
+        // Convertir enum antiguo a nuevo
+        com.appciencias.algorithms.FuncionHash.TipoPlegamiento tipo = 
+            (tipoPlegamiento == TipoPlegamiento.SUMA) ? com.appciencias.algorithms.FuncionHash.TipoPlegamiento.SUMA
+                                                       : com.appciencias.algorithms.FuncionHash.TipoPlegamiento.MULTIPLICACION;
+        this.funcionHashObj = new com.appciencias.algorithms.FuncionHash(tamaño, tipo);
         this.tipoColision = tipoColision;
-        this.tipoPlegamiento = tipoPlegamiento;
         this.tabla = new String[n];
     }
 
+    /**
+     * Calcula el hash de una clave usando la función hash configurada.
+     */
     private int calcularHash(String clave) {
-        switch (funcionHash) {
-            case MOD:
-                return hashMod(clave);
-            case CUADRADO:
-                return hashCuadrado(clave);
-            case TRUNCAMIENTO:
-                return hashTruncamiento(clave);
-            case PLEGAMIENTO:
-                return hashPlegamiento(clave);
-            default:
-                throw new IllegalStateException("Funcion hash no reconocida.");
-        }
-    }
-
-    /**
-     * H(k) = (k mod n) + 1 Los dos dígitos menos significativos del resultado
-     * son el residuo.
-     */
-    private int hashMod(String clave) {
-        long k = ClaveUtil.aNumero(clave);
-        return (int) (k % n) + 1;
-    }
-
-    /**
-     * H(k) = (k² mod n) + 1
-     */
-    private int hashCuadrado(String clave) {
-        long k = ClaveUtil.aNumero(clave) % 1_000_000L;
-        long cuadrado = k * k;
-        return (int) (cuadrado % n) + 1;
-    }
-
-    /**
-     * Se trabaja sobre los dígitos del NÚMERO k obtenido de la clave. Se
-     * extraen los dígitos en las posiciones indicadas.
-     */
-    private int hashTruncamiento(String clave) {
-        String digitos = ClaveUtil.aDigitos(clave); // dígitos del número k
-        StringBuilder extraido = new StringBuilder();
-
-        for (int pos : posicionesTrunc) {
-            if (pos >= 1 && pos <= digitos.length()) {
-                extraido.append(digitos.charAt(pos - 1));
-            }
-            // Si la posición está fuera del rango, se omite silenciosamente
-        }
-
-        if (extraido.length() == 0) {
-            throw new IllegalStateException(
-                    "Ninguna posicion de truncamiento es valida para la clave '" + clave
-                    + "'. Numero k tiene " + digitos.length() + " digito(s).");
-        }
-
-        long valor = Long.parseLong(extraido.toString());
-        return (int) (valor % n) + 1;
-    }
-
-    /**
-     * Plegamiento: divide la clave en grupos de 2 caracteres.
-     *
-     * Si la longitud de la clave es IMPAR: El grupo del centro tiene solo 1
-     * carácter (se toma el de la izquierda).
-     */
-    private int hashPlegamiento(String clave) {
-        String digitos = ClaveUtil.aDigitos(clave);
-        int len = digitos.length();
-
-        // Dividir en grupos de 2 digitos (de izquierda a derecha)
-        ArrayList<Long> grupos = new ArrayList<>();
-        for (int i = 0; i < len; i += 2) {
-            int fin = Math.min(i + 2, len);
-            grupos.add(Long.parseLong(digitos.substring(i, fin)));
-        }
-
-        // Combinar grupos
-        long resultado;
-        if (tipoPlegamiento == TipoPlegamiento.SUMA) {
-            resultado = 0;
-            for (long g : grupos) {
-                resultado += g;
-            }
-        } else { // MULTIPLICACION
-            resultado = 1;
-            for (long g : grupos) {
-                // Evitar multiplicar por 0 si un grupo es "00"
-                resultado *= (g == 0 ? 1 : g);
-            }
-        }
-
-        return (int) (resultado % n) + 1;
+        return funcionHashObj.calcular(clave);
     }
 
     /**
@@ -346,8 +287,24 @@ public class TablaHash {
         return contador >= n;
     }
 
+    public com.appciencias.algorithms.FuncionHash getFuncionHashObj() {
+        return funcionHashObj;
+    }
+
+    /**
+     * @deprecated Use getFuncionHashObj()
+     */
+    @Deprecated
     public FuncionHash getFuncionHash() {
-        return funcionHash;
+        // Intentar mantener compatibilidad
+        com.appciencias.algorithms.FuncionHash.Tipo tipo = funcionHashObj.getTipo();
+        switch (tipo) {
+            case MOD: return FuncionHash.MOD;
+            case CUADRADO: return FuncionHash.CUADRADO;
+            case TRUNCAMIENTO: return FuncionHash.TRUNCAMIENTO;
+            case PLEGAMIENTO: return FuncionHash.PLEGAMIENTO;
+            default: return FuncionHash.MOD;
+        }
     }
 
     public TipoColision getTipoColision() {
