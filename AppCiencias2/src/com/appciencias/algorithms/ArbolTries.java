@@ -6,10 +6,9 @@ import java.util.ArrayList;
 /**
  * Arbol simple
  *
- * - La RAÍZ siempre está vacía (nodo de enlace, nunca guarda dato). - Cuando
+ * - La raiz siempre esta vacia (nodo de enlace, nunca guarda dato). - Cuando
  * dos claves comparten bits iniciales, los nodos del camino compartido son Nodo
- * Enlace (clave = null), solo sirven para navegar. - Los datos solo viven en el
- * primer nodo libre donde los caminos divergen.
+ * Enlace (clave = null), solo sirven para navegar.
  */
 public class ArbolTries {
 
@@ -60,7 +59,7 @@ public class ArbolTries {
     }
 
     /**
-     * Inserta físicamente en el arbol sin tocar el historial. Usado tanto por
+     * Inserta fisicamente en el arbol sin tocar el historial. Usado tanto por
      * insertar() como por reconstruir().
      */
     private void insertarEnArbol(String clave) {
@@ -213,7 +212,7 @@ public class ArbolTries {
     }
 
     /**
-     * Info de conversión de una clave.
+     * Info de conversion de una clave.
      */
     public String obtenerInfo(String clave) {
         return ClaveArbol.obtenerInfo(clave);

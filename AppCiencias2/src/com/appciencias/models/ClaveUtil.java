@@ -5,7 +5,7 @@ public class ClaveUtil {
     /**
      * Convierte una clave a su valor numérico k.
      *
-     * @param clave Clave (solo números, solo letras, o alfanumerica)
+     * @param clave Clave (solo numeros, solo letras, o alfanumerica)
      * @return Valor numérico k (siempre >= 0)
      */
     public static long aNumero(String clave) {
@@ -14,7 +14,7 @@ public class ClaveUtil {
         }
 
         if (esNumerica(clave)) {
-            // Clave numérica pura, usa el valor directamente
+            // Clave numerica pura, usa el valor directamente
             return Long.parseLong(clave);
         } else {
             // Letras o alfanumerico, suma simple de valores ASCII

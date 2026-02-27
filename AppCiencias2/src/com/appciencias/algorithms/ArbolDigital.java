@@ -7,7 +7,7 @@ import java.util.ArrayList;
  * Arbol Digital
  *
  * - Cada clave es UNA letra (a-z / A-Z). - la letra tiene una posicion
- * alfabética (a=1…z=26), son 5 bits binarios. Bit '1' = rama derecha, Bit '0' =
+ * alfabetica (a=1…z=26), son 5 bits binarios. Bit '1' = rama derecha, Bit '0' =
  * rama izquierda.
  */
 public class ArbolDigital {
