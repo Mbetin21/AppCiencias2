@@ -16,6 +16,7 @@ public class BusquedasPanel extends JPanel {
     private boolean sidebarExpanded = true;
     private SecuencialPanel secuencialPanel;
     private BinarioPanel binarioPanel;
+    private HashPanel hashPanel;
     
     // Colores consistentes con el resto de la aplicación
     private final Color BACKGROUND_COLOR = new Color(245, 245, 250);
@@ -314,6 +315,7 @@ public class BusquedasPanel extends JPanel {
 
         secuencialPanel = new SecuencialPanel();
         binarioPanel = new BinarioPanel();
+        hashPanel = new HashPanel();
         
         // Cargar contenido por defecto
         loadContent("secuencial");
@@ -374,11 +376,7 @@ public class BusquedasPanel extends JPanel {
      * Crea contenido para Búsqueda Hash
      */
     private JPanel createHashContent() {
-        return createContentTemplate(
-            "Búsqueda Hash",
-            "Algoritmo que utiliza funciones hash para mapear claves a posiciones en una tabla, permitiendo búsquedas en tiempo constante promedio.",
-            new String[]{"Complejidad: O(1) promedio", "Usa funciones de dispersión", "Manejo de colisiones necesario", "Muy rápida para acceso directo"}
-        );
+        return hashPanel;
     }
     
     /**
