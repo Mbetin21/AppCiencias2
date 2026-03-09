@@ -17,6 +17,10 @@ public class BusquedasPanel extends JPanel {
     private SecuencialPanel secuencialPanel;
     private BinarioPanel binarioPanel;
     private HashPanel hashPanel;
+    private JPanel arbolDigitalPanel;
+    private JPanel triesPanel;
+    private JPanel arbolMultiplePanel;
+    private JPanel arbolHuffmanPanel;
     
     // Colores consistentes con el resto de la aplicación
     private final Color BACKGROUND_COLOR = new Color(245, 245, 250);
@@ -67,9 +71,21 @@ public class BusquedasPanel extends JPanel {
         JPanel topPanel = createTopPanel();
         sidebar.add(topPanel, BorderLayout.NORTH);
         
-        // Panel central con opciones de navegación
+        // Panel central con opciones de navegación envuelto en JScrollPane
         JPanel menuPanel = createMenuPanel();
-        sidebar.add(menuPanel, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(menuPanel);
+        scrollPane.setBackground(SIDEBAR_COLOR);
+        scrollPane.getViewport().setBackground(SIDEBAR_COLOR);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        
+        // Personalizar la barra de desplazamiento
+        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+        scrollBar.setBackground(SIDEBAR_COLOR);
+        scrollBar.setUnitIncrement(16);
+        
+        sidebar.add(scrollPane, BorderLayout.CENTER);
         
         // Panel inferior con botón de volver
         JPanel bottomPanel = createBottomPanel();
@@ -179,6 +195,27 @@ public class BusquedasPanel extends JPanel {
         
         JButton btnHash = createMenuButton("Búsqueda Hash", "hash");
         panel.add(btnHash);
+        panel.add(Box.createVerticalStrut(20));
+        
+        // Sección: Estructuras de Árboles
+        JLabel arbolesLabel = createSectionLabel("Estructuras de Árboles");
+        panel.add(arbolesLabel);
+        panel.add(Box.createVerticalStrut(8));
+        
+        JButton btnArbolDigital = createMenuButton("Árbol Digital", "arboldigital");
+        panel.add(btnArbolDigital);
+        panel.add(Box.createVerticalStrut(5));
+        
+        JButton btnTries = createMenuButton("Tries", "tries");
+        panel.add(btnTries);
+        panel.add(Box.createVerticalStrut(5));
+        
+        JButton btnArbolMultiple = createMenuButton("Residuos Múltiples", "arbolmultiple");
+        panel.add(btnArbolMultiple);
+        panel.add(Box.createVerticalStrut(5));
+        
+        JButton btnArbolHuffman = createMenuButton("Árbol de Huffman", "arbolhuffman");
+        panel.add(btnArbolHuffman);
         panel.add(Box.createVerticalStrut(20));
         
         // Sección: Búsquedas Externas
@@ -317,6 +354,12 @@ public class BusquedasPanel extends JPanel {
         binarioPanel = new BinarioPanel();
         hashPanel = new HashPanel();
         
+        // Inicializar paneles de árboles (placeholders)
+        arbolDigitalPanel = createPlaceholderPanel("Árbol Digital");
+        triesPanel = createPlaceholderPanel("Tries");
+        arbolMultiplePanel = createPlaceholderPanel("Árbol Múltiple");
+        arbolHuffmanPanel = createPlaceholderPanel("Árbol de Huffman");
+        
         // Cargar contenido por defecto
         loadContent("secuencial");
         
@@ -339,7 +382,19 @@ public class BusquedasPanel extends JPanel {
                 content = binarioPanel;
                 break;
             case "hash":
-                content = createHashContent();
+                content = hashPanel;
+                break;
+            case "arboldigital":
+                content = arbolDigitalPanel;
+                break;
+            case "tries":
+                content = triesPanel;
+                break;
+            case "arbolmultiple":
+                content = arbolMultiplePanel;
+                break;
+            case "arbolhuffman":
+                content = arbolHuffmanPanel;
                 break;
             default:
                 content = createDefaultContent();
@@ -377,6 +432,63 @@ public class BusquedasPanel extends JPanel {
      */
     private JPanel createHashContent() {
         return hashPanel;
+    }
+    
+    /**
+     * Crea un panel placeholder para estructuras de árboles
+     * que serán implementadas posteriormente
+     */
+    private JPanel createPlaceholderPanel(String title) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(BACKGROUND_COLOR);
+        
+        // Título
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        titleLabel.setForeground(TEXT_PRIMARY);
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(titleLabel);
+        panel.add(Box.createVerticalStrut(15));
+        
+        // Descripción de desarrollo
+        JTextArea descArea = new JTextArea("Esta estructura está lista para ser implementada.");
+        descArea.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        descArea.setForeground(TEXT_SECONDARY);
+        descArea.setBackground(BACKGROUND_COLOR);
+        descArea.setLineWrap(true);
+        descArea.setWrapStyleWord(true);
+        descArea.setEditable(false);
+        descArea.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(descArea);
+        panel.add(Box.createVerticalStrut(25));
+        
+        // Panel para contenido futuro
+        JPanel futurePanel = new JPanel();
+        futurePanel.setLayout(new BoxLayout(futurePanel, BoxLayout.Y_AXIS));
+        futurePanel.setBackground(new Color(235, 235, 245));
+        futurePanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER_COLOR, 1),
+            BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        ));
+        futurePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JLabel statusLabel = new JLabel("Estado: En desarrollo");
+        statusLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        statusLabel.setForeground(TEXT_PRIMARY);
+        statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        futurePanel.add(statusLabel);
+        futurePanel.add(Box.createVerticalStrut(10));
+        
+        JLabel placeholderLabel = new JLabel("Próximamente se implementarán visualización y pruebas interactivas para " + title);
+        placeholderLabel.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+        placeholderLabel.setForeground(TEXT_SECONDARY);
+        placeholderLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        futurePanel.add(placeholderLabel);
+        
+        panel.add(futurePanel);
+        
+        return panel;
     }
     
     /**
@@ -482,7 +594,10 @@ public class BusquedasPanel extends JPanel {
         // Ocultar/mostrar componentes del sidebar excepto el botón hamburger
         Component[] components = sidebarPanel.getComponents();
         for (Component comp : components) {
-            if (comp instanceof JPanel) {
+            // Manejar JScrollPane (contiene el menú)
+            if (comp instanceof JScrollPane) {
+                comp.setVisible(sidebarExpanded);
+            } else if (comp instanceof JPanel) {
                 JPanel panel = (JPanel) comp;
                 if (panel.getLayout() instanceof BorderLayout) {
                     Component center = ((BorderLayout) panel.getLayout()).getLayoutComponent(BorderLayout.CENTER);
