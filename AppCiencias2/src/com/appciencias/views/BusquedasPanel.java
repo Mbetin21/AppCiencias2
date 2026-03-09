@@ -19,7 +19,7 @@ public class BusquedasPanel extends JPanel {
     private HashPanel hashPanel;
     private ArbolDigitalPanel arbolDigitalPanel;
     private ArbolTriesPanel triesPanel;
-    private JPanel arbolMultiplePanel;
+    private ArbolMultiplePanel arbolMultiplePanel;
     private JPanel arbolHuffmanPanel;
     
     // Colores consistentes con el resto de la aplicación
@@ -357,7 +357,7 @@ public class BusquedasPanel extends JPanel {
         // Inicializar paneles de árboles
         arbolDigitalPanel = new ArbolDigitalPanel();
         triesPanel = new ArbolTriesPanel();
-        arbolMultiplePanel = createPlaceholderPanel("Árbol Múltiple");
+        arbolMultiplePanel = new ArbolMultiplePanel();
         arbolHuffmanPanel = createPlaceholderPanel("Árbol de Huffman");
         
         // Cargar contenido por defecto

@@ -116,4 +116,52 @@ public class ClaveArbol {
         String bits = charA8Bits(c);
         return "'" + c + "' → ASCII " + ascii + " → " + bits;
     }
+
+    // ─── Métodos 8 bits reales (para Residuos Múltiples) ─────────────
+
+    /**
+     * Valida que la clave sea exactamente 1 carácter con valor 0-255.
+     */
+    public static void validar8Bits(String clave) {
+        if (clave == null || clave.isEmpty()) {
+            throw new IllegalArgumentException("La clave no puede ser vacía.");
+        }
+        if (clave.length() != 1) {
+            throw new IllegalArgumentException(
+                    "Se recibe un carácter a la vez. Se recibió: '" + clave + "'"
+            );
+        }
+        char c = clave.charAt(0);
+        if (c > 255) {
+            throw new IllegalArgumentException(
+                    "Carácter fuera del rango (0-255): código " + (int) c
+            );
+        }
+    }
+
+    /**
+     * Convierte un carácter a binario de 8 bits reales.
+     */
+    public static String charABinario8Bits(char c) {
+        return String.format("%8s", Integer.toBinaryString((int) c)).replace(' ', '0');
+    }
+
+    /**
+     * Convierte una clave de 1 carácter a su cadena binaria de 8 bits.
+     */
+    public static String claveABinario8Bits(String clave) {
+        validar8Bits(clave);
+        return charABinario8Bits(clave.charAt(0));
+    }
+
+    /**
+     * Retorna info de la clave con 8 bits para mostrar en pantalla.
+     */
+    public static String obtenerInfo8Bits(String clave) {
+        validar8Bits(clave);
+        char c = clave.charAt(0);
+        int ascii = (int) c;
+        String bits = charABinario8Bits(c);
+        return "'" + c + "' → ASCII " + ascii + " → " + bits;
+    }
 }
