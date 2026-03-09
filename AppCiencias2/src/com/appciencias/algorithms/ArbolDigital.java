@@ -14,7 +14,7 @@ public class ArbolDigital {
 
     public static class Nodo {
 
-        public String clave;
+            public String clave;
         public Nodo izquierda;
         public Nodo derecha;
 
