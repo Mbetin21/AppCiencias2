@@ -6,9 +6,10 @@ import java.util.ArrayList;
 /**
  * Arbol Digital
  *
- * - Cada clave es UNA letra (a-z / A-Z). - la letra tiene una posicion
- * alfabetica (a=1…z=26), son 5 bits binarios. Bit '1' = rama derecha, Bit '0' =
- * rama izquierda.
+ * - Cada clave es UN caracter ASCII imprimible.
+ * - Se convierte a su valor ASCII (8 bits binarios).
+ * - Bit '1' = rama derecha, Bit '0' = rama izquierda.
+ * - El arbol tiene hasta 8 niveles.
  */
 public class ArbolDigital {
 
@@ -36,15 +37,14 @@ public class ArbolDigital {
     }
 
     /**
-     * Inserta una letra en el arbol digital. Siempre recorre los bits
+     * Inserta un caracter en el arbol digital. Siempre recorre los bits
      * completos.
      *
-     * @throws IllegalArgumentException si la clave no es una letra a-z
+     * @throws IllegalArgumentException si la clave no es un caracter ASCII valido
      * @throws IllegalStateException si la clave ya existe
      */
     public void insertar(String clave) {
-        ClaveArbol.validar(clave);
-        clave = clave.toUpperCase();
+        ClaveArbol.validarASCII(clave);
 
         if (buscar(clave)) {
             throw new IllegalStateException("La clave '" + clave + "' ya existe en el arbol.");
@@ -60,7 +60,7 @@ public class ArbolDigital {
      * insertar() como por reconstruir().
      */
     private void insertarEnArbol(String clave) {
-        String bits = ClaveArbol.claveABinario(clave);
+        String bits = ClaveArbol.claveABinarioASCII(clave);
 
         // Arbol vacio, la clave va en la raiz
         if (raiz == null) {
@@ -99,8 +99,7 @@ public class ArbolDigital {
         if (clave == null || clave.isEmpty()) {
             return false;
         }
-        ClaveArbol.validar(clave);
-        clave = clave.toUpperCase();
+        ClaveArbol.validarASCII(clave);
 
         if (raiz == null) {
             return false;
@@ -109,7 +108,7 @@ public class ArbolDigital {
             return true;
         }
 
-        String bits = ClaveArbol.claveABinario(clave);
+        String bits = ClaveArbol.claveABinarioASCII(clave);
         Nodo actual = raiz;
 
         for (int i = 0; i < bits.length(); i++) {
@@ -135,8 +134,7 @@ public class ArbolDigital {
      * @throws IllegalArgumentException si la clave no existe
      */
     public void eliminar(String clave) {
-        ClaveArbol.validar(clave);
-        clave = clave.toUpperCase();
+        ClaveArbol.validarASCII(clave);
 
         if (!buscar(clave)) {
             throw new IllegalArgumentException("La clave '" + clave + "' no existe en el arbol.");
@@ -196,7 +194,7 @@ public class ArbolDigital {
      * Info de conversion de una clave.
      */
     public String obtenerInfo(String clave) {
-        return ClaveArbol.obtenerInfo(clave);
+        return ClaveArbol.obtenerInfoASCII(clave);
     }
 
     public int getContador() {

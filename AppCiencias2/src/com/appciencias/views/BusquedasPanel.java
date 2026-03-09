@@ -17,7 +17,7 @@ public class BusquedasPanel extends JPanel {
     private SecuencialPanel secuencialPanel;
     private BinarioPanel binarioPanel;
     private HashPanel hashPanel;
-    private JPanel arbolDigitalPanel;
+    private ArbolDigitalPanel arbolDigitalPanel;
     private JPanel triesPanel;
     private JPanel arbolMultiplePanel;
     private JPanel arbolHuffmanPanel;
@@ -354,8 +354,8 @@ public class BusquedasPanel extends JPanel {
         binarioPanel = new BinarioPanel();
         hashPanel = new HashPanel();
         
-        // Inicializar paneles de árboles (placeholders)
-        arbolDigitalPanel = createPlaceholderPanel("Árbol Digital");
+        // Inicializar paneles de árboles
+        arbolDigitalPanel = new ArbolDigitalPanel();
         triesPanel = createPlaceholderPanel("Tries");
         arbolMultiplePanel = createPlaceholderPanel("Árbol Múltiple");
         arbolHuffmanPanel = createPlaceholderPanel("Árbol de Huffman");

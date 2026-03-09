@@ -68,4 +68,52 @@ public class ClaveArbol {
         String bits = letraA5Bits(c);
         return Character.toUpperCase(c) + " → posicion " + pos + " → " + bits;
     }
+
+    // ─── Métodos ASCII (para Árbol Digital) ─────────────────────────
+
+    /**
+     * Valida que la clave sea exactamente 1 carácter ASCII imprimible (32-126).
+     */
+    public static void validarASCII(String clave) {
+        if (clave == null || clave.isEmpty()) {
+            throw new IllegalArgumentException("La clave no puede ser vacia.");
+        }
+        if (clave.length() != 1) {
+            throw new IllegalArgumentException(
+                    "Se recibe un caracter a la vez. Se recibio: '" + clave + "'"
+            );
+        }
+        char c = clave.charAt(0);
+        if (c < 32 || c > 126) {
+            throw new IllegalArgumentException(
+                    "Caracter fuera del rango ASCII imprimible (32-126): '" + c + "'"
+            );
+        }
+    }
+
+    /**
+     * Convierte un carácter ASCII a binario de 7 bits.
+     */
+    public static String charA8Bits(char c) {
+        return String.format("%7s", Integer.toBinaryString((int) c)).replace(' ', '0');
+    }
+
+    /**
+     * Convierte una clave de 1 carácter a su cadena binaria de 7 bits (ASCII).
+     */
+    public static String claveABinarioASCII(String clave) {
+        validarASCII(clave);
+        return charA8Bits(clave.charAt(0));
+    }
+
+    /**
+     * Retorna info ASCII de la clave para mostrar en pantalla.
+     */
+    public static String obtenerInfoASCII(String clave) {
+        validarASCII(clave);
+        char c = clave.charAt(0);
+        int ascii = (int) c;
+        String bits = charA8Bits(c);
+        return "'" + c + "' → ASCII " + ascii + " → " + bits;
+    }
 }
