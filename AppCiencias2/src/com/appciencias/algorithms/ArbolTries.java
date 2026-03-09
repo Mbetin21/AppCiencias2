@@ -40,14 +40,13 @@ public class ArbolTries {
     }
 
     /**
-     * Inserta una letra en el arbol.
+     * Inserta una clave en el arbol.
      *
-     * @throws IllegalArgumentException si la clave no es una letra a-z
+     * @throws IllegalArgumentException si la clave no es válida
      * @throws IllegalStateException si la clave ya existe
      */
     public void insertar(String clave) {
-        ClaveArbol.validar(clave);
-        clave = clave.toUpperCase();
+        ClaveArbol.validarASCII(clave);
 
         if (buscar(clave)) {
             throw new IllegalStateException("La clave '" + clave + "' ya existe en el arbol.");
@@ -63,7 +62,7 @@ public class ArbolTries {
      * insertar() como por reconstruir().
      */
     private void insertarEnArbol(String clave) {
-        String bits = ClaveArbol.claveABinario(clave);
+        String bits = ClaveArbol.claveABinarioASCII(clave);
         insertarRecursivo(raiz, clave, bits, 0);
     }
 
@@ -102,7 +101,7 @@ public class ArbolTries {
             String nuevaClave, String nuevosBits, int nivel) {
         Nodo colisionado = esDerecha ? padre.derecha : padre.izquierda;
         String claveVieja = colisionado.clave;
-        String bitsViejos = ClaveArbol.claveABinario(claveVieja);
+        String bitsViejos = ClaveArbol.claveABinarioASCII(claveVieja);
 
         colisionado.clave = null; // convertir en nodo de enlace
 
@@ -111,7 +110,7 @@ public class ArbolTries {
     }
 
     /**
-     * Busca una letra en el arbol.
+     * Busca una clave en el arbol.
      *
      * @return true si existe, false si no
      */
@@ -119,9 +118,8 @@ public class ArbolTries {
         if (clave == null || clave.isEmpty()) {
             return false;
         }
-        ClaveArbol.validar(clave);
-        clave = clave.toUpperCase();
-        String bits = ClaveArbol.claveABinario(clave);
+        ClaveArbol.validarASCII(clave);
+        String bits = ClaveArbol.claveABinarioASCII(clave);
         return buscarRecursivo(raiz, clave, bits, 0);
     }
 
@@ -155,8 +153,7 @@ public class ArbolTries {
      * @throws IllegalArgumentException si la clave no existe
      */
     public void eliminar(String clave) {
-        ClaveArbol.validar(clave);
-        clave = clave.toUpperCase();
+        ClaveArbol.validarASCII(clave);
 
         if (!buscar(clave)) {
             throw new IllegalArgumentException("La clave '" + clave + "' no existe en el arbol.");
