@@ -421,14 +421,15 @@ public class HashExterno {
      * y aplica mod numBloques.
      */
     private int hashConversionBase(String clave) {
-        long k = ClaveUtil.aNumero(clave);
-        String enBase = Long.toString(k, base); // convierte a la base
-        long sumaDigitos = 0;
-        for (char ch : enBase.toCharArray()) {
-            // Los digitos en bases > 10 son letras (a=10, b=11...), convertir
-            sumaDigitos += Character.digit(ch, base);
+        String digitos = ClaveUtil.aDigitos(clave); // digitos de k
+        int n = digitos.length();
+        long resultado = 0;
+        for (int i = 0; i < n; i++) {
+            int digito = Character.getNumericValue(digitos.charAt(i));
+            long potencia = (long) Math.pow(base, n - 1 - i);
+            resultado += digito * potencia;
         }
-        return (int) (sumaDigitos % numBloques) + 1;
+        return (int) (resultado % numBloques) + 1;
     }
 
     /**
