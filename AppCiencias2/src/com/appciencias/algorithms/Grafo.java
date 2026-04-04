@@ -294,7 +294,7 @@ public class Grafo {
     public void fusionarVertices(String v1, String v2) {
         v1 = v1.trim();
         v2 = v2.trim();
-
+ 
         if (!vertices.contains(v1)) {
             throw new IllegalArgumentException(
                     "El vértice '" + v1 + "' no existe.");
@@ -307,43 +307,55 @@ public class Grafo {
             throw new IllegalArgumentException(
                     "No se puede fusionar un vértice consigo mismo.");
         }
-
+ 
         String fusionado = v1 + "," + v2; // nombre del vertice fusionado
-
-        // Reemplazar v1 y v2 por el fusionado en la lista de vertices
+ 
+        // Reemplazar v1 y v2 por el fusionado en la lista de vértices
         int posV1 = vertices.indexOf(v1);
         vertices.set(posV1, fusionado);
         vertices.remove(v2);
-
-        // Actualizar aristas:
+ 
+        // Actualizar aristas: reemplazar v1 o v2 por fusionado
+        // Los bucles (fusionado-fusionado) SI se permiten
         ArrayList<Arista> nuevasAristas = new ArrayList<>();
         for (Arista a : aristas) {
-            // Saltar la arista entre v1 y v2
-            if ((a.v1.equals(v1) && a.v2.equals(v2))
-                    || (a.v1.equals(v2) && a.v2.equals(v1))) {
-                continue;
-            }
-
             String nuevoV1 = a.v1;
             String nuevoV2 = a.v2;
-
-            if (nuevoV1.equals(v1) || nuevoV1.equals(v2)) {
-                nuevoV1 = fusionado;
-            }
-            if (nuevoV2.equals(v1) || nuevoV2.equals(v2)) {
-                nuevoV2 = fusionado;
-            }
-
+ 
+            if (nuevoV1.equals(v1) || nuevoV1.equals(v2)) nuevoV1 = fusionado;
+            if (nuevoV2.equals(v1) || nuevoV2.equals(v2)) nuevoV2 = fusionado;
+ 
             Arista nueva = new Arista(nuevoV1, nuevoV2);
-
-            // Evitar aristas duplicadas o bucles que puedan surgir
-            if (!nuevoV1.equals(nuevoV2) && !nuevasAristas.contains(nueva)) {
+ 
+            // Solo eliminar duplicados — los bucles SI se permiten
+            if (!nuevasAristas.contains(nueva)) {
                 nuevasAristas.add(nueva);
             }
         }
-
+ 
         aristas.clear();
         aristas.addAll(nuevasAristas);
+    }
+ 
+    /**
+     * Complemento: G'  = complemento de G.
+     *   S' = S  (mismos vertices)
+     *   A' = todas las aristas posibles entre pares de vertices
+     *        que NO existen en G.
+     */
+    public Grafo complemento() {
+        Grafo gc = new Grafo(nombre + "'");
+        gc.vertices.addAll(vertices);
+ 
+        for (int i = 0; i < vertices.size(); i++) {
+            for (int j = i + 1; j < vertices.size(); j++) {
+                Arista posible = new Arista(vertices.get(i), vertices.get(j));
+                if (!aristas.contains(posible)) {
+                    gc.aristas.add(posible);
+                }
+            }
+        }
+        return gc;
     }
 
     public String getNombre() {
