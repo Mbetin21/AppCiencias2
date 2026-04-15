@@ -53,6 +53,10 @@ public class Dinamicas {
     private final int regPorCubeta;
     private final int longClave;
     private final Tipo tipo;
+    private final Tipo tipoExp;
+    private final Tipo tipoRed;
+    private final double umbralExp;
+    private final double umbralRed;
 
     /**
      * cubetas.get(i) = lista de claves en la cubeta i. Las primeras
@@ -83,20 +87,45 @@ public class Dinamicas {
      */
     public Dinamicas(int numCubetas, int regPorCubeta,
             int longClave, Tipo tipo) {
+        this(numCubetas, regPorCubeta, longClave, tipo, tipo,
+                UMBRAL_EXPANSION, UMBRAL_REDUCCION);
+    }
+
+    /**
+     * Constructor con tipos y umbrales independientes para expansion y reduccion.
+     */
+    public Dinamicas(int numCubetas, int regPorCubeta,
+            Tipo tipoExp, Tipo tipoRed, double umbralExp, double umbralRed) {
+        this(numCubetas, regPorCubeta, 0, tipoExp, tipoRed, umbralExp, umbralRed);
+    }
+
+    private Dinamicas(int numCubetas, int regPorCubeta,
+            int longClave, Tipo tipoExp, Tipo tipoRed,
+            double umbralExp, double umbralRed) {
         if (numCubetas <= 0) {
             throw new IllegalArgumentException("Numero deCubetas debe ser mayor que 0.");
         }
         if (regPorCubeta <= 0) {
             throw new IllegalArgumentException("Registros por cubeta debe ser mayor que 0.");
         }
-        if (longClave <= 0) {
+        if (longClave < 0) {
             throw new IllegalArgumentException("Longitud de clave debe ser mayor que 0.");
+        }
+        if (tipoExp == null || tipoRed == null) {
+            throw new IllegalArgumentException("Los tipos de expansion y reduccion son obligatorios.");
+        }
+        if (umbralExp <= 0 || umbralRed <= 0) {
+            throw new IllegalArgumentException("Los umbrales deben ser mayores que 0.");
         }
 
         this.numCubetas = numCubetas;
         this.regPorCubeta = regPorCubeta;
         this.longClave = longClave;
-        this.tipo = tipo;
+        this.tipo = tipoExp;
+        this.tipoExp = tipoExp;
+        this.tipoRed = tipoRed;
+        this.umbralExp = umbralExp;
+        this.umbralRed = umbralRed;
         this.contador = 0;
         this.historialIngreso = new ArrayList<>();
         this.ultimoEvento = null;
@@ -112,7 +141,7 @@ public class Dinamicas {
      * @throws IllegalArgumentException si la longitud de clave es incorrecta.
      */
     public void insertar(String clave) {
-        ClaveUtil.validar(clave, longClave);
+        validarClave(clave);
 
         if (buscar(clave) != -1) {
             throw new IllegalStateException("La clave '" + clave + "' ya existe.");
@@ -125,7 +154,7 @@ public class Dinamicas {
 
         // Verificar DO de expansion
         double do_ = calcularDOExpansion();
-        if (do_ > UMBRAL_EXPANSION) {
+        if (do_ > umbralExp) {
             expandir(clave, do_);
         }
     }
@@ -156,7 +185,7 @@ public class Dinamicas {
      * @throws IllegalArgumentException si la clave no existe.
      */
     public void eliminar(String clave) {
-        ClaveUtil.validar(clave, longClave);
+        validarClave(clave);
 
         int idx = buscar(clave);
         if (idx == -1) {
@@ -170,16 +199,27 @@ public class Dinamicas {
         // Verificar DO de reduccion
         if (numCubetas > 1) {
             double do_ = calcularDOReduccion();
-            if (do_ < UMBRAL_REDUCCION) {
+            if (do_ < umbralRed) {
                 reducir(clave, do_);
             }
+        }
+    }
+
+    private void validarClave(String clave) {
+        if (longClave > 0) {
+            ClaveUtil.validar(clave, longClave);
+            return;
+        }
+
+        if (clave == null || clave.isEmpty()) {
+            throw new IllegalArgumentException("La clave no puede ser vacia.");
         }
     }
 
     private void expandir(String claveDetonante, double doAntes) {
         int cubetasAntes = numCubetas;
 
-        if (tipo == Tipo.TOTAL) {
+        if (tipoExp == Tipo.TOTAL) {
             numCubetas = numCubetas * 2;
         } else {
             numCubetas = (int) Math.ceil(numCubetas * 1.5);
@@ -194,7 +234,7 @@ public class Dinamicas {
     private void reducir(String claveDetonante, double doAntes) {
         int cubetasAntes = numCubetas;
 
-        if (tipo == Tipo.TOTAL) {
+        if (tipoRed == Tipo.TOTAL) {
             numCubetas = numCubetas / 2;
         } else {
             numCubetas = (int) Math.floor(numCubetas / 1.5);
@@ -267,6 +307,10 @@ public class Dinamicas {
         return copia;
     }
 
+    public ArrayList<ArrayList<String>> obtenerCubetas() {
+        return obtenerEstructura();
+    }
+
     /**
      * Cuantas filas de colision tiene una cubeta. Si tiene mas de regPorCubeta
      * elementos, las extra son colisiones.
@@ -309,7 +353,9 @@ public class Dinamicas {
                 + "  Reg/cubeta=" + regPorCubeta
                 + "  Registros=" + contador
                 + "  DO exp=" + String.format("%.2f%%", calcularDOExpansion() * 100)
-                + "  DO red=" + String.format("%.2f%%", calcularDOReduccion() * 100);
+                + "  DO red=" + String.format("%.2f%%", calcularDOReduccion() * 100)
+                + "  Umbral exp=" + String.format("%.2f", umbralExp)
+                + "  Umbral red=" + String.format("%.2f", umbralRed);
     }
 
     public int getNumCubetas() {

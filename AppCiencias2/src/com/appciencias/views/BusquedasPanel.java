@@ -24,6 +24,7 @@ public class BusquedasPanel extends JPanel {
     private ArbolTriesPanel triesPanel;
     private ArbolMultiplePanel arbolMultiplePanel;
     private HuffmanPanel arbolHuffmanPanel;
+    private DinamicasPanel dinamicasPanel;
     
     // Colores consistentes con el resto de la aplicación
     private final Color BACKGROUND_COLOR = new Color(245, 245, 250);
@@ -236,6 +237,10 @@ public class BusquedasPanel extends JPanel {
 
         JButton btnHashExterna = createMenuButton("Búsqueda Hash", "hash_externa");
         panel.add(btnHashExterna);
+        panel.add(Box.createVerticalStrut(5));
+
+        JButton btnDinamicasExternas = createMenuButton("Búsquedas Dinámicas", "dinamicas_externas");
+        panel.add(btnDinamicasExternas);
         
         // Seleccionar el primer botón por defecto
         selectMenuButton(btnSecuencial);
@@ -369,6 +374,7 @@ public class BusquedasPanel extends JPanel {
         triesPanel = new ArbolTriesPanel();
         arbolMultiplePanel = new ArbolMultiplePanel();
         arbolHuffmanPanel = new HuffmanPanel();
+        dinamicasPanel = new DinamicasPanel();
         
         // Cargar contenido por defecto
         loadContent("secuencial");
@@ -402,6 +408,9 @@ public class BusquedasPanel extends JPanel {
                 break;
             case "hash_externa":
                 content = hashExternoPanel;
+                break;
+            case "dinamicas_externas":
+                content = dinamicasPanel;
                 break;
             case "arboldigital":
                 content = arbolDigitalPanel;
