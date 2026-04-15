@@ -16,6 +16,9 @@ public class BusquedasPanel extends JPanel {
     private boolean sidebarExpanded = true;
     private SecuencialPanel secuencialPanel;
     private BinarioPanel binarioPanel;
+    private SecuencialExternoPanel secuencialExternoPanel;
+    private BinarioExternoPanel binarioExternoPanel;
+    private HashExternoPanel hashExternoPanel;
     private HashPanel hashPanel;
     private ArbolDigitalPanel arbolDigitalPanel;
     private ArbolTriesPanel triesPanel;
@@ -222,13 +225,17 @@ public class BusquedasPanel extends JPanel {
         JLabel externasLabel = createSectionLabel("Búsquedas Externas");
         panel.add(externasLabel);
         panel.add(Box.createVerticalStrut(8));
-        
-        JLabel placeholderLabel = new JLabel("(En desarrollo...)");
-        placeholderLabel.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        placeholderLabel.setForeground(TEXT_SECONDARY);
-        placeholderLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        placeholderLabel.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 0));
-        panel.add(placeholderLabel);
+
+        JButton btnLinealExterna = createMenuButton("Búsqueda Lineal", "lineal_externa");
+        panel.add(btnLinealExterna);
+        panel.add(Box.createVerticalStrut(5));
+
+        JButton btnBinariaExterna = createMenuButton("Búsqueda Binaria", "binaria_externa");
+        panel.add(btnBinariaExterna);
+        panel.add(Box.createVerticalStrut(5));
+
+        JButton btnHashExterna = createMenuButton("Búsqueda Hash", "hash_externa");
+        panel.add(btnHashExterna);
         
         // Seleccionar el primer botón por defecto
         selectMenuButton(btnSecuencial);
@@ -352,6 +359,9 @@ public class BusquedasPanel extends JPanel {
 
         secuencialPanel = new SecuencialPanel();
         binarioPanel = new BinarioPanel();
+        secuencialExternoPanel = new SecuencialExternoPanel();
+        binarioExternoPanel = new BinarioExternoPanel();
+        hashExternoPanel = new HashExternoPanel();
         hashPanel = new HashPanel();
         
         // Inicializar paneles de árboles
@@ -383,6 +393,15 @@ public class BusquedasPanel extends JPanel {
                 break;
             case "hash":
                 content = hashPanel;
+                break;
+            case "lineal_externa":
+                content = secuencialExternoPanel;
+                break;
+            case "binaria_externa":
+                content = binarioExternoPanel;
+                break;
+            case "hash_externa":
+                content = hashExternoPanel;
                 break;
             case "arboldigital":
                 content = arbolDigitalPanel;
