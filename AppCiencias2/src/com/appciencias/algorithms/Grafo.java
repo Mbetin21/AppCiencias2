@@ -294,7 +294,7 @@ public class Grafo {
     public void fusionarVertices(String v1, String v2) {
         v1 = v1.trim();
         v2 = v2.trim();
- 
+
         if (!vertices.contains(v1)) {
             throw new IllegalArgumentException(
                     "El vértice '" + v1 + "' no existe.");
@@ -307,46 +307,48 @@ public class Grafo {
             throw new IllegalArgumentException(
                     "No se puede fusionar un vértice consigo mismo.");
         }
- 
+
         String fusionado = v1 + "," + v2; // nombre del vertice fusionado
- 
+
         // Reemplazar v1 y v2 por el fusionado en la lista de vértices
         int posV1 = vertices.indexOf(v1);
         vertices.set(posV1, fusionado);
         vertices.remove(v2);
- 
+
         // Actualizar aristas: reemplazar v1 o v2 por fusionado
         // Los bucles (fusionado-fusionado) SI se permiten
         ArrayList<Arista> nuevasAristas = new ArrayList<>();
         for (Arista a : aristas) {
             String nuevoV1 = a.v1;
             String nuevoV2 = a.v2;
- 
-            if (nuevoV1.equals(v1) || nuevoV1.equals(v2)) nuevoV1 = fusionado;
-            if (nuevoV2.equals(v1) || nuevoV2.equals(v2)) nuevoV2 = fusionado;
- 
+
+            if (nuevoV1.equals(v1) || nuevoV1.equals(v2)) {
+                nuevoV1 = fusionado;
+            }
+            if (nuevoV2.equals(v1) || nuevoV2.equals(v2)) {
+                nuevoV2 = fusionado;
+            }
+
             Arista nueva = new Arista(nuevoV1, nuevoV2);
- 
+
             // Solo eliminar duplicados — los bucles SI se permiten
             if (!nuevasAristas.contains(nueva)) {
                 nuevasAristas.add(nueva);
             }
         }
- 
+
         aristas.clear();
         aristas.addAll(nuevasAristas);
     }
- 
+
     /**
-     * Complemento: G'  = complemento de G.
-     *   S' = S  (mismos vertices)
-     *   A' = todas las aristas posibles entre pares de vertices
-     *        que NO existen en G.
+     * Complemento: G' = complemento de G. S' = S (mismos vertices) A' = todas
+     * las aristas posibles entre pares de vertices que NO existen en G.
      */
     public Grafo complemento() {
         Grafo gc = new Grafo(nombre + "'");
         gc.vertices.addAll(vertices);
- 
+
         for (int i = 0; i < vertices.size(); i++) {
             for (int j = i + 1; j < vertices.size(); j++) {
                 Arista posible = new Arista(vertices.get(i), vertices.get(j));
@@ -356,6 +358,139 @@ public class Grafo {
             }
         }
         return gc;
+    }
+
+    /**
+     * Contraccion de arista: contrae la arista entre v1 y v2. Es la misma
+     * huevada que contraccion vertice la verdad.
+     *
+     * @throws IllegalArgumentException si la arista no existe.
+     */
+    public void contraerArista(String v1, String v2) {
+        v1 = v1.trim();
+        v2 = v2.trim();
+        if (!aristas.contains(new Arista(v1, v2))) {
+            throw new IllegalArgumentException(
+                    "La arista '" + v1 + "-" + v2 + "' no existe.");
+        }
+        // Fusionar los dos vértices — la fusion ya maneja las aristas
+        fusionarVertices(v1, v2);
+    }
+
+    /**
+     * Producto Cartesiano: G1 x G2 = G3 S3 = V(G1) x V(G2) Arista entre (u1,u2)
+     * y (v1,v2) si: u1 = v1 Y u2 adyacente a v2 en G2, O u2 = v2 Y u1 adyacente
+     * a v1 en G1
+     */
+    public static Grafo productoCartesiano(Grafo g1, Grafo g2) {
+        Grafo g3 = new Grafo("G1 x G2");
+
+        // S3 = pares concatenados: u1+u2
+        for (String u1 : g1.vertices) {
+            for (String u2 : g2.vertices) {
+                g3.vertices.add(u1 + u2);
+            }
+        }
+
+        // Aristas
+        for (String u1 : g1.vertices) {
+            for (String u2 : g2.vertices) {
+                String origen = u1 + u2;
+
+                // Caso 1: u1 = v1, u2 adyacente a v2 en G2
+                for (String v2 : g2.getVecinos(u2)) {
+                    String destino = u1 + v2;
+                    Arista a = new Arista(origen, destino);
+                    if (!g3.aristas.contains(a)) {
+                        g3.aristas.add(a);
+                    }
+                }
+
+                // Caso 2: u2 = v2, u1 adyacente a v1 en G1
+                for (String v1 : g1.getVecinos(u1)) {
+                    String destino = v1 + u2;
+                    Arista a = new Arista(origen, destino);
+                    if (!g3.aristas.contains(a)) {
+                        g3.aristas.add(a);
+                    }
+                }
+            }
+        }
+        return g3;
+    }
+
+    /**
+     * Producto Tensorial: G1 ⊗ G2 = G3 S3 = V(G1) x V(G2) Arista entre (u1,u2)
+     * y (v1,v2) si: u1 adyacente a v1 en G1 Y u2 adyacente a v2 en G2
+     */
+    public static Grafo productoTensorial(Grafo g1, Grafo g2) {
+        Grafo g3 = new Grafo("G1 ⊗ G2");
+        // S3 = pares concatenados: u1+u2
+        for (String u1 : g1.vertices) {
+            for (String u2 : g2.vertices) {
+                g3.vertices.add(u1 + u2);
+            }
+        }
+
+        // Aristas
+        for (String u1 : g1.vertices) {
+            for (String u2 : g2.vertices) {
+                String origen = u1 + u2;
+
+                // u1 adyacente a v1 EN G1  Y  u2 adyacente a v2 EN G2
+                for (String v1 : g1.getVecinos(u1)) {
+                    for (String v2 : g2.getVecinos(u2)) {
+                        String destino = v1 + v2;
+                        Arista a = new Arista(origen, destino);
+                        if (!g3.aristas.contains(a)) {
+                            g3.aristas.add(a);
+                        }
+                    }
+                }
+            }
+        }
+        return g3;
+    }
+
+    /**
+     * Composicion: G1[G2] = G3 S3 = V(G1) x V(G2) Arista entre (u1,u2) y
+     * (v1,v2) si: u1 adyacente a v1 en G1, O u1 = v1 Y u2 adyacente a v2 en G2
+     */
+    public static Grafo composicion(Grafo g1, Grafo g2) {
+        Grafo g3 = new Grafo("G1[G2]");
+        // S3 = pares concatenados: u1+u2
+        for (String u1 : g1.vertices) {
+            for (String u2 : g2.vertices) {
+                g3.vertices.add(u1 + u2);
+            }
+        }
+
+        // Aristas
+        for (String u1 : g1.vertices) {
+            for (String u2 : g2.vertices) {
+                String origen = u1 + u2;
+
+                for (String v1 : g1.vertices) {
+                    for (String v2 : g2.vertices) {
+                        String destino = v1 + v2;
+                        if (origen.equals(destino)) {
+                            continue;
+                        }
+
+                        boolean condicion1 = g1.aristas.contains(new Arista(u1, v1));
+                        boolean condicion2 = u1.equals(v1) && g2.aristas.contains(new Arista(u2, v2));
+
+                        if (condicion1 || condicion2) {
+                            Arista a = new Arista(origen, destino);
+                            if (!g3.aristas.contains(a)) {
+                                g3.aristas.add(a);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return g3;
     }
 
     public String getNombre() {
