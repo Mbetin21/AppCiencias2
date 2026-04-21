@@ -70,11 +70,28 @@ public class Grafo {
         if (v == null || v.trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del vertice no puede estar vacio.");
         }
-        v = v.trim();
+        v = v.trim().toLowerCase();
         if (vertices.contains(v)) {
             throw new IllegalArgumentException("El vertice '" + v + "' ya existe en el grafo.");
         }
         vertices.add(v);
+    }
+
+    /**
+     * Agrega uno o varios vertices separados por coma. Cada vertice se trimea
+     * antes de insertarse.
+     *
+     * @throws IllegalArgumentException si alguno ya existe o el nombre es
+     * vacio.
+     */
+    public void agregarVertices(String entrada) {
+        if (entrada == null || entrada.trim().isEmpty()) {
+            throw new IllegalArgumentException("La entrada no puede estar vacía.");
+        }
+        String[] partes = entrada.split(",");
+        for (String parte : partes) {
+            agregarVertice(parte.trim()); // reutiliza la validacion existente
+        }
     }
 
     /**
@@ -84,8 +101,8 @@ public class Grafo {
      * la arista ya existe, o si v1 == v2 (bucle).
      */
     public void agregarArista(String v1, String v2) {
-        v1 = v1.trim();
-        v2 = v2.trim();
+        v1 = v1.trim().toLowerCase();
+        v2 = v2.trim().toLowerCase();
 
         if (!vertices.contains(v1)) {
             throw new IllegalArgumentException(
@@ -114,7 +131,7 @@ public class Grafo {
      * @throws IllegalArgumentException si el vertice no existe.
      */
     public void eliminarVertice(String v) {
-        v = v.trim();
+        v = v.trim().toLowerCase();
         if (!vertices.contains(v)) {
             throw new IllegalArgumentException("El vertice '" + v + "' no existe.");
         }
@@ -129,8 +146,8 @@ public class Grafo {
      * @throws IllegalArgumentException si la arista no existe.
      */
     public void eliminarArista(String v1, String v2) {
-        v1 = v1.trim();
-        v2 = v2.trim();
+        v1 = v1.trim().toLowerCase();
+        v2 = v2.trim().toLowerCase();
         Arista a = new Arista(v1, v2);
         if (!aristas.contains(a)) {
             throw new IllegalArgumentException(
@@ -292,8 +309,8 @@ public class Grafo {
      * son el mismo.
      */
     public void fusionarVertices(String v1, String v2) {
-        v1 = v1.trim();
-        v2 = v2.trim();
+        v1 = v1.trim().toLowerCase();
+        v2 = v2.trim().toLowerCase();
 
         if (!vertices.contains(v1)) {
             throw new IllegalArgumentException(
@@ -367,8 +384,8 @@ public class Grafo {
      * @throws IllegalArgumentException si la arista no existe.
      */
     public void contraerArista(String v1, String v2) {
-        v1 = v1.trim();
-        v2 = v2.trim();
+        v1 = v1.trim().toLowerCase();
+        v2 = v2.trim().toLowerCase();
         if (!aristas.contains(new Arista(v1, v2))) {
             throw new IllegalArgumentException(
                     "La arista '" + v1 + "-" + v2 + "' no existe.");
@@ -514,7 +531,7 @@ public class Grafo {
     }
 
     public boolean contieneVertice(String v) {
-        return vertices.contains(v.trim());
+        return vertices.contains(v.trim().toLowerCase());
     }
 
     public boolean contieneArista(String v1, String v2) {
