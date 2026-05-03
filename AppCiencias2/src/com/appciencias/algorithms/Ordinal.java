@@ -7,16 +7,6 @@ import java.util.LinkedHashMap;
  * Numeracion Ordinal de vertices de un grafo.
  *
  * No dirigido: se numeran en el orden en que fueron ingresados (izq a derecha).
- *
- * Dirigido: ordenamiento topologico.
- *   1. Los nodos sin ningun predecesor se numeran primero.
- *   2. Si hay empate (varios sin predecesor al mismo tiempo) se numeran
- *      uno por uno en el orden en que aparecen en el grafo.
- *   3. Al numerar un nodo se "elimina" del analisis y se revisa quien
- *      quedo sin predecesor (o con todos sus predecesores ya numerados).
- *   4. Un nodo puede numerarse si TODAS sus aristas entrantes vienen
- *      de nodos ya numerados.
- *   5. Se repite hasta numerar todos.
  */
 public class Ordinal {
 
@@ -24,14 +14,15 @@ public class Ordinal {
      * Representa el numero asignado a un vertice en un paso del proceso.
      */
     public static class Paso {
+
         public final int numero;      // numero ordinal asignado
         public final String vertice;  // vertice que recibio ese numero
         public final String motivo;   // por que se numeró en este paso
 
         public Paso(int numero, String vertice, String motivo) {
-            this.numero  = numero;
+            this.numero = numero;
             this.vertice = vertice;
-            this.motivo  = motivo;
+            this.motivo = motivo;
         }
 
         @Override
@@ -44,6 +35,7 @@ public class Ordinal {
      * Resultado de la numeracion ordinal.
      */
     public static class Resultado {
+
         // Mapa vertice -> numero ordinal asignado (en orden de asignacion)
         public final LinkedHashMap<String, Integer> numeracion;
         // Pasos del proceso para mostrar al usuario
@@ -52,19 +44,19 @@ public class Ordinal {
         public final boolean dirigido;
 
         public Resultado(LinkedHashMap<String, Integer> numeracion,
-                         ArrayList<Paso> pasos,
-                         boolean dirigido) {
+                ArrayList<Paso> pasos,
+                boolean dirigido) {
             this.numeracion = new LinkedHashMap<>(numeracion);
-            this.pasos      = new ArrayList<>(pasos);
-            this.dirigido   = dirigido;
+            this.pasos = new ArrayList<>(pasos);
+            this.dirigido = dirigido;
         }
 
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
             sb.append("=== NUMERACIÓN ORDINAL (")
-              .append(dirigido ? "DIRIGIDO" : "NO DIRIGIDO")
-              .append(") ===\n\n");
+                    .append(dirigido ? "DIRIGIDO" : "NO DIRIGIDO")
+                    .append(") ===\n\n");
 
             if (dirigido) {
                 sb.append("--- Paso a paso ---\n");
@@ -86,10 +78,9 @@ public class Ordinal {
     //  NO DIRIGIDO — Grafo.java
     //  Numeracion en orden de insercion (izquierda a derecha)
     // =====================================================================
-
     /**
-     * Numeracion ordinal para grafo NO dirigido.
-     * Los vertices se numeran en el orden en que fueron ingresados al grafo.
+     * Numeracion ordinal para grafo NO dirigido. Los vertices se numeran en el
+     * orden en que fueron ingresados al grafo.
      *
      * @param grafo Grafo no dirigido (Grafo.java).
      * @return Resultado con la numeracion.
@@ -118,28 +109,25 @@ public class Ordinal {
     //  DIRIGIDO — GrafoPonderado.java
     //  Ordenamiento topologico por predecesores
     // =====================================================================
-
     /**
      * Numeracion ordinal para grafo DIRIGIDO (GrafoPonderado).
      *
-     * Algoritmo:
-     * 1. Buscar nodos sin predecesor (nadie apunta hacia ellos).
-     * 2. Numerarlos uno por uno en orden de aparicion.
-     * 3. Marcarlos como numerados y repetir:
-     *    un nodo puede numerarse cuando todos sus predecesores ya estan numerados.
-     * 4. Continuar hasta numerar todos los nodos.
+     * Algoritmo: 1. Buscar nodos sin predecesor (nadie apunta hacia ellos). 2.
+     * Numerarlos uno por uno en orden de aparicion. 3. Marcarlos como numerados
+     * y repetir: un nodo puede numerarse cuando todos sus predecesores ya estan
+     * numerados. 4. Continuar hasta numerar todos los nodos.
      *
      * @param grafo Grafo dirigido ponderado.
      * @return Resultado con la numeracion y el paso a paso.
      * @throws IllegalArgumentException si el grafo esta vacio o tiene ciclos
-     *                                  (no se puede hacer ordenamiento topologico).
+     * (no se puede hacer ordenamiento topologico).
      */
     public static Resultado calcularDirigido(GrafoPonderado grafo) {
         if (grafo == null || grafo.getNumVertices() == 0) {
             throw new IllegalArgumentException("El grafo no puede estar vacío.");
         }
 
-        ArrayList<String> vertices      = grafo.getVertices();
+        ArrayList<String> vertices = grafo.getVertices();
         ArrayList<GrafoPonderado.AristaPonderada> aristas = grafo.getAristas();
 
         LinkedHashMap<String, Integer> numeracion = new LinkedHashMap<>();
@@ -155,8 +143,9 @@ public class Ordinal {
             ArrayList<String> candidatos = new ArrayList<>();
 
             for (String v : vertices) {
-                if (numerados.contains(v)) continue; // ya numerado
-
+                if (numerados.contains(v)) {
+                    continue; // ya numerado
+                }
                 // Obtener predecesores de v (nodos que tienen arista hacia v)
                 ArrayList<String> predecesores = getPredecesores(v, aristas);
 
@@ -172,7 +161,9 @@ public class Ordinal {
                             break;
                         }
                     }
-                    if (todosNumerados) candidatos.add(v);
+                    if (todosNumerados) {
+                        candidatos.add(v);
+                    }
                 }
             }
 
@@ -180,11 +171,13 @@ public class Ordinal {
             if (candidatos.isEmpty()) {
                 ArrayList<String> sinNumerar = new ArrayList<>();
                 for (String v : vertices) {
-                    if (!numerados.contains(v)) sinNumerar.add(v);
+                    if (!numerados.contains(v)) {
+                        sinNumerar.add(v);
+                    }
                 }
                 throw new IllegalArgumentException(
-                    "El grafo tiene un ciclo. No se puede hacer ordenamiento topológico. "
-                    + "Vértices sin numerar: " + sinNumerar.toString());
+                        "El grafo tiene un ciclo. No se puede hacer ordenamiento topológico. "
+                        + "Vértices sin numerar: " + sinNumerar.toString());
             }
 
             // Numerar candidatos uno por uno en orden de aparicion en el grafo
@@ -209,8 +202,8 @@ public class Ordinal {
     }
 
     /**
-     * Retorna la lista de predecesores de un vertice v.
-     * Un predecesor es un nodo u tal que existe la arista u -> v.
+     * Retorna la lista de predecesores de un vertice v. Un predecesor es un
+     * nodo u tal que existe la arista u -> v.
      */
     private static ArrayList<String> getPredecesores(
             String v, ArrayList<GrafoPonderado.AristaPonderada> aristas) {

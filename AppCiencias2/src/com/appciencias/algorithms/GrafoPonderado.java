@@ -92,7 +92,7 @@ public class GrafoPonderado {
      * @throws IllegalArgumentException si el vertice no existe.
      */
     public void eliminarVertice(String v) {
-        v = v.trim();
+        v = v.trim().toLowerCase();
         if (!vertices.contains(v)) {
             throw new IllegalArgumentException("El vértice '" + v + "' no existe.");
         }
