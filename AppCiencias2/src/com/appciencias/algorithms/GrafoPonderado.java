@@ -49,11 +49,21 @@ public class GrafoPonderado {
     private final String nombre;
     private final ArrayList<String> vertices;
     private final ArrayList<AristaPonderada> aristas;
+    private final boolean dirigido; // true = dirigido, false = no dirigido (bidireccional)
 
     public GrafoPonderado(String nombre) {
+        this(nombre, true); // por defecto dirigido, no rompe nada existente
+    }
+
+    public GrafoPonderado(String nombre, boolean dirigido) {
         this.nombre = nombre;
+        this.dirigido = dirigido;
         this.vertices = new ArrayList<>();
         this.aristas = new ArrayList<>();
+    }
+
+    public boolean isDirigido() {
+        return dirigido;
     }
 
     /**
@@ -131,6 +141,13 @@ public class GrafoPonderado {
         if (aristas.contains(nueva)) {
             throw new IllegalArgumentException(
                     "La arista '" + origen + " -> " + destino + "' ya existe.");
+        }
+
+        if (!dirigido) {
+            AristaPonderada inversa = new AristaPonderada(destino, origen, peso);
+            if (!aristas.contains(inversa)) {
+                aristas.add(inversa);
+            }
         }
         aristas.add(nueva);
     }

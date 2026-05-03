@@ -131,13 +131,12 @@ public class Grafo {
      * @throws IllegalArgumentException si el vertice no existe.
      */
     public void eliminarVertice(String v) {
-        v = v.trim().toLowerCase();
-        if (!vertices.contains(v)) {
-            throw new IllegalArgumentException("El vertice '" + v + "' no existe.");
+        final String vFinal = v.trim().toLowerCase();
+        if (!vertices.contains(vFinal)) {
+            throw new IllegalArgumentException("El vertice '" + vFinal + "' no existe en el grafo.");
         }
-        vertices.remove(v);
-        // Eliminar todas las aristas que incluyan este vertice
-        aristas.removeIf(a -> a.v1.equals(v) || a.v2.equals(v));
+        vertices.remove(vFinal);
+        aristas.removeIf(a -> a.v1.equals(vFinal) || a.v2.equals(vFinal));
     }
 
     /**
@@ -146,9 +145,9 @@ public class Grafo {
      * @throws IllegalArgumentException si la arista no existe.
      */
     public void eliminarArista(String v1, String v2) {
-        v1 = v1.trim().toLowerCase();
-        v2 = v2.trim().toLowerCase();
-        Arista a = new Arista(v1, v2);
+        final String v1Final = v1.trim().toLowerCase();
+        final String v2Final = v2.trim().toLowerCase();
+        Arista a = new Arista(v1Final, v2Final);
         if (!aristas.contains(a)) {
             throw new IllegalArgumentException(
                     "La arista '" + v1 + "-" + v2 + "' no existe.");
