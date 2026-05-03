@@ -7,11 +7,16 @@ import java.util.HashMap;
 /**
  * Arbol de Expansion Minima y Maxima usando el algoritmo de Kruskal.
  *
- * Recibe un GrafoPonderado y genera: - Expansion minima: aristas de menor a
- * mayor peso, sin ciclos. - Expansion maxima: aristas de mayor a menor peso,
- * sin ciclos.
+ * Recibe un GrafoPonderado y genera:
+ * - Expansion minima: aristas de menor a mayor peso, sin ciclos.
+ * - Expansion maxima: aristas de mayor a menor peso, sin ciclos.
+ * - Ramas: aristas del arbol de expansion minima.
+ * - Cuerdas: aristas que NO entraron al arbol de expansion minima
+ *            (las que formaban ciclo o sobraron).
+ *
+ * Deteccion de ciclos: Union-Find (conjuntos disjuntos).
  */
-public class GeneracionArbol {
+public class ArbolGenerador {
 
     /**
      * Tipos de expansion disponibles.
@@ -25,18 +30,17 @@ public class GeneracionArbol {
      * Registro de una arista analizada durante el proceso.
      */
     public static class PasoKruskal {
-
         public final int numero;                          // numero de paso
         public final GrafoPonderado.AristaPonderada arista; // arista analizada
         public final boolean aceptada;                    // true = se tomo, false = genera ciclo
         public final String motivo;                       // descripcion del resultado
 
         public PasoKruskal(int numero, GrafoPonderado.AristaPonderada arista,
-                boolean aceptada, String motivo) {
-            this.numero = numero;
-            this.arista = arista;
+                           boolean aceptada, String motivo) {
+            this.numero   = numero;
+            this.arista   = arista;
             this.aceptada = aceptada;
-            this.motivo = motivo;
+            this.motivo   = motivo;
         }
 
         @Override
@@ -51,67 +55,57 @@ public class GeneracionArbol {
      * Resultado completo de una expansion.
      */
     public static class Resultado {
-
         public final Tipo tipo;
-        public final ArrayList<GrafoPonderado.AristaPonderada> arbolExpansion;    // aristas aceptadas
-        public final ArrayList<GrafoPonderado.AristaPonderada> aristasRechazadas; // aristas rechazadas
-        public final ArrayList<PasoKruskal> pasos; // paso a paso completo
-        public final double pesoTotal;             // suma de pesos del arbol
+        public final ArrayList<GrafoPonderado.AristaPonderada> arbolExpansion;
+        public final ArrayList<GrafoPonderado.AristaPonderada> aristasRechazadas;
+        public final ArrayList<PasoKruskal> pasos;
+        public final double pesoTotal;
+        // Ramas = aristas que SI forman T (arbol minimo)
+        // Cuerdas = aristas de G que NO entraron en T (existen en G pero no en T)
+        public final ArrayList<GrafoPonderado.AristaPonderada> ramas;
+        public final ArrayList<GrafoPonderado.AristaPonderada> cuerdas;
 
         public Resultado(Tipo tipo,
-                ArrayList<GrafoPonderado.AristaPonderada> arbolExpansion,
-                ArrayList<GrafoPonderado.AristaPonderada> aristasRechazadas,
-                ArrayList<PasoKruskal> pasos) {
-            this.tipo = tipo;
-            this.arbolExpansion = new ArrayList<>(arbolExpansion);
+                         ArrayList<GrafoPonderado.AristaPonderada> arbolExpansion,
+                         ArrayList<GrafoPonderado.AristaPonderada> aristasRechazadas,
+                         ArrayList<PasoKruskal> pasos) {
+            this.tipo              = tipo;
+            this.arbolExpansion    = new ArrayList<>(arbolExpansion);
             this.aristasRechazadas = new ArrayList<>(aristasRechazadas);
-            this.pasos = new ArrayList<>(pasos);
-
+            this.pasos             = new ArrayList<>(pasos);
+            this.ramas             = new ArrayList<>(arbolExpansion);
+            this.cuerdas           = new ArrayList<>(aristasRechazadas);
             double suma = 0;
-            for (GrafoPonderado.AristaPonderada a : arbolExpansion) {
-                suma += a.peso;
-            }
+            for (GrafoPonderado.AristaPonderada a : arbolExpansion) suma += a.peso;
             this.pesoTotal = suma;
         }
 
-        /**
-         * Resumen
-         */
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            String nombreTipo = (tipo == Tipo.MINIMA) ? "MÍNIMA" : "MÁXIMA";
-            sb.append("=== EXPANSIÓN ").append(nombreTipo).append(" ===\n\n");
-
+            String nt = (tipo == Tipo.MINIMA) ? "MÍNIMA" : "MÁXIMA";
+            sb.append("=== EXPANSIÓN ").append(nt).append(" ===\n\n");
             sb.append("--- Paso a paso ---\n");
-            for (PasoKruskal p : pasos) {
-                sb.append(p.toString()).append("\n");
-            }
-
-            sb.append("\n--- Árbol de expansión ").append(nombreTipo).append(" ---\n");
-            sb.append("Aristas aceptadas: ").append(arbolExpansion.size()).append("\n");
-            for (GrafoPonderado.AristaPonderada a : arbolExpansion) {
-                sb.append("  ").append(a.toString()).append("\n");
-            }
-            sb.append("Peso total: ").append(pesoTotal).append("\n");
-
-            sb.append("\n--- Aristas rechazadas ---\n");
-            sb.append("Rechazadas: ").append(aristasRechazadas.size()).append("\n");
-            for (GrafoPonderado.AristaPonderada a : aristasRechazadas) {
-                sb.append("  ").append(a.toString()).append("\n");
-            }
-
+            for (PasoKruskal p : pasos) sb.append(p).append("\n");
+            sb.append("\n--- T: Árbol de expansión ").append(nt).append(" ---\n");
+            sb.append("Ramas (aristas de T): ").append(ramas.size()).append("\n");
+            for (GrafoPonderado.AristaPonderada a : ramas) sb.append("  ").append(a).append("\n");
+            sb.append("Peso total de T: ").append(pesoTotal).append("\n");
+            sb.append("\n--- T': Complemento (aristas de G no en T) ---\n");
+            sb.append("Cuerdas (aristas de T'): ").append(cuerdas.size()).append("\n");
+            for (GrafoPonderado.AristaPonderada a : cuerdas) sb.append("  ").append(a).append("\n");
             return sb.toString();
         }
     }
 
+    // ========================= UNION-FIND =========================
+
     /**
-     * Union-Find para detección eficiente de ciclos. Cada vertice empieza en su
-     * propio conjunto. Si dos vertices ya estan en el mismo conjunto -> agregar
-     * la arista formaria ciclo.
+     * Union-Find para deteccion eficiente de ciclos.
+     * Cada vertice empieza en su propio conjunto.
+     * Si dos vertices ya estan en el mismo conjunto -> agregar la arista formaria ciclo.
      */
     private static class UnionFind {
-
         private final HashMap<String, String> padre;
 
         public UnionFind(ArrayList<String> vertices) {
@@ -121,9 +115,7 @@ public class GeneracionArbol {
             }
         }
 
-        /**
-         * Encuentra la raiz del conjunto de v (con compresion de camino).
-         */
+        /** Encuentra la raiz del conjunto de v (con compresion de camino). */
         public String encontrar(String v) {
             if (!padre.get(v).equals(v)) {
                 padre.put(v, encontrar(padre.get(v))); // compresion de camino
@@ -133,9 +125,8 @@ public class GeneracionArbol {
 
         /**
          * Une los conjuntos de v1 y v2.
-         *
-         * @return true si se unieron (estaban en conjuntos distintos), false si
-         * ya estaban en el mismo conjunto (habria ciclo).
+         * @return true si se unieron (estaban en conjuntos distintos),
+         *         false si ya estaban en el mismo conjunto (habria ciclo).
          */
         public boolean unir(String v1, String v2) {
             String raiz1 = encontrar(v1);
@@ -148,14 +139,15 @@ public class GeneracionArbol {
         }
     }
 
+    // ========================= ALGORITMO =========================
+
     /**
      * Calcula el arbol de expansion segun el tipo indicado.
      *
      * @param grafo Grafo ponderado sobre el que se trabaja (NO se modifica).
-     * @param tipo MINIMA o MAXIMA.
+     * @param tipo  MINIMA o MAXIMA.
      * @return Resultado con pasos, arbol, ramas y cuerdas.
-     * @throws IllegalArgumentException si el grafo esta vacio o no tiene
-     * aristas.
+     * @throws IllegalArgumentException si el grafo esta vacio o no tiene aristas.
      */
     public static Resultado calcular(GrafoPonderado grafo, Tipo tipo) {
         if (grafo == null || grafo.getNumVertices() == 0) {
@@ -166,8 +158,8 @@ public class GeneracionArbol {
         }
 
         // Copia de aristas ordenadas segun el tipo
-        ArrayList<GrafoPonderado.AristaPonderada> aristasOrdenadas
-                = new ArrayList<>(grafo.getAristas());
+        ArrayList<GrafoPonderado.AristaPonderada> aristasOrdenadas =
+                new ArrayList<>(grafo.getAristas());
 
         if (tipo == Tipo.MINIMA) {
             // Menor a mayor
@@ -180,7 +172,7 @@ public class GeneracionArbol {
         // Union-Find inicializado con todos los vertices
         UnionFind uf = new UnionFind(grafo.getVertices());
 
-        ArrayList<GrafoPonderado.AristaPonderada> aceptadas = new ArrayList<>();
+        ArrayList<GrafoPonderado.AristaPonderada> aceptadas  = new ArrayList<>();
         ArrayList<GrafoPonderado.AristaPonderada> rechazadas = new ArrayList<>();
         ArrayList<PasoKruskal> pasos = new ArrayList<>();
 
@@ -212,6 +204,7 @@ public class GeneracionArbol {
 
     /**
      * Calcula ambas expansiones de una vez y retorna las dos.
+     * Util para mostrar ramas y cuerdas juntas.
      *
      * @return arreglo de 2: [0] = expansion minima, [1] = expansion maxima
      */
