@@ -25,6 +25,7 @@ public class BusquedasPanel extends JPanel {
     private ArbolMultiplePanel arbolMultiplePanel;
     private HuffmanPanel arbolHuffmanPanel;
     private DinamicasPanel dinamicasPanel;
+    private IndicesPanel indicesPanel;
     
     // Colores consistentes con el resto de la aplicación
     private final Color BACKGROUND_COLOR = new Color(245, 245, 250);
@@ -241,6 +242,15 @@ public class BusquedasPanel extends JPanel {
 
         JButton btnDinamicasExternas = createMenuButton("Búsquedas Dinámicas", "dinamicas_externas");
         panel.add(btnDinamicasExternas);
+        panel.add(Box.createVerticalStrut(20));
+
+        // Sección: Estructuras de Índices
+        JLabel indicesLabel = createSectionLabel("Estructuras de Índices");
+        panel.add(indicesLabel);
+        panel.add(Box.createVerticalStrut(8));
+
+        JButton btnIndices = createMenuButton("Índices", "indices");
+        panel.add(btnIndices);
         
         // Seleccionar el primer botón por defecto
         selectMenuButton(btnSecuencial);
@@ -375,6 +385,7 @@ public class BusquedasPanel extends JPanel {
         arbolMultiplePanel = new ArbolMultiplePanel();
         arbolHuffmanPanel = new HuffmanPanel();
         dinamicasPanel = new DinamicasPanel();
+        indicesPanel = new IndicesPanel();
         
         // Cargar contenido por defecto
         loadContent("secuencial");
@@ -423,6 +434,9 @@ public class BusquedasPanel extends JPanel {
                 break;
             case "arbolhuffman":
                 content = arbolHuffmanPanel;
+                break;
+            case "indices":
+                content = indicesPanel;
                 break;
             default:
                 content = createDefaultContent();
