@@ -15,6 +15,7 @@ public class MainWindow extends JFrame {
     // Referencias a los paneles
     private HomePanel homePanel;
     private BusquedasPanel busquedasPanel;
+    private GrafosPanel grafosPanel;
     
     public MainWindow() {
         initializeWindow();
@@ -47,6 +48,10 @@ public class MainWindow extends JFrame {
         // Panel de búsquedas
         busquedasPanel = new BusquedasPanel(this);
         panelContainer.add(busquedasPanel, "BUSQUEDAS_INTERNAS");
+
+        // Panel de grafos
+        grafosPanel = new GrafosPanel(this);
+        panelContainer.add(grafosPanel, "GRAFOS");
     }
     
     /**

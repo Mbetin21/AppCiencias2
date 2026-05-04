@@ -86,13 +86,13 @@ public class HomePanel extends JPanel {
         
         gbc.gridy = 1;
         
-        // Botón Búsquedas Externas
-        JButton btnBusquedasExternas = createMainButton(
+        // Botón Grafos
+        JButton btnGrafos = createMainButton(
             "Grafos",
             "",
-            "BUSQUEDAS_EXTERNAS"
+            "GRAFOS"
         );
-        panel.add(btnBusquedasExternas, gbc);
+        panel.add(btnGrafos, gbc);
         
         return panel;
     }
