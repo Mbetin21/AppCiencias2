@@ -27,6 +27,9 @@ public class GrafosPanel extends JPanel {
 
     private JButton currentSelectedButton = null;
 
+    // Sub-paneles (se inicializan lazy en createContentPanel)
+    private OperacionesPanel operacionesPanel;
+
     public GrafosPanel(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
         initializePanel();
@@ -165,7 +168,7 @@ public class GrafosPanel extends JPanel {
         panel.add(createSectionLabel("Operaciones"));
         panel.add(Box.createVerticalStrut(8));
 
-        JButton btnOperaciones = createMenuButton("Operaciones unarias y binarias", "operaciones");
+        JButton btnOperaciones = createMenuButton("Operaciones", "operaciones");
         panel.add(btnOperaciones);
         panel.add(Box.createVerticalStrut(5));
 
@@ -335,6 +338,8 @@ public class GrafosPanel extends JPanel {
         contentPanel.setBackground(BACKGROUND_COLOR);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
+        operacionesPanel = new OperacionesPanel();
+
         loadContent("operaciones");
 
         return contentPanel;
@@ -350,10 +355,7 @@ public class GrafosPanel extends JPanel {
 
         switch (contentType) {
             case "operaciones":
-                content = createPlaceholderPanel(
-                        "Operaciones unarias y binarias",
-                        "Operaciones sobre grafos no dirigidos: unión (∪), intersección (∩), suma anillo (⊕), suma, complemento, fusión y contracción de aristas."
-                );
+                content = operacionesPanel;
                 break;
             case "productos":
                 content = createPlaceholderPanel(
