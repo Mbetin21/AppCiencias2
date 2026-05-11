@@ -19,6 +19,21 @@ import javax.swing.JPanel;
  */
 public class GrafoCanvas extends JPanel {
 
+    /**
+     * Estado visual de un vértice. Usado por algoritmos (centro/bicentro,
+     * Dijkstra, etc.) para resaltar vértices según su rol en la ejecución.
+     */
+    public enum VertexState {
+        /** Vértice activo / por defecto */
+        NORMAL,
+        /** Vértice atenuado (ya no participa, en gris) */
+        FADED,
+        /** Vértice resaltado como "eliminado en este paso" (naranja) */
+        LEAF,
+        /** Vértice resaltado como centro / bicentro / resultado (verde) */
+        CENTER
+    }
+
     private Grafo grafo;
     private final LinkedHashMap<String, Point2D.Double> positions = new LinkedHashMap<>();
     private String draggedVertex = null;
@@ -32,12 +47,26 @@ public class GrafoCanvas extends JPanel {
     private int gridRows = 0;
     private int gridCols = 0;
 
+    // Estados visuales por vértice (null = todos NORMAL)
+    private Map<String, VertexState> vertexStates = null;
+
     private static final int VERTEX_RADIUS = 20;
     private static final Color CANVAS_BACKGROUND = new Color(252, 252, 254);
     private static final Color VERTEX_FILL = new Color(225, 232, 245);
     private static final Color VERTEX_BORDER = new Color(120, 135, 165);
     private static final Color VERTEX_LABEL = new Color(50, 55, 70);
+    private static final Color VERTEX_LEAF_FILL = new Color(250, 222, 195);
+    private static final Color VERTEX_LEAF_BORDER = new Color(200, 130, 70);
+    private static final Color VERTEX_LEAF_LABEL = new Color(110, 60, 30);
+    private static final Color VERTEX_FADED_FILL = new Color(235, 235, 238);
+    private static final Color VERTEX_FADED_BORDER = new Color(205, 205, 210);
+    private static final Color VERTEX_FADED_LABEL = new Color(170, 170, 180);
+    private static final Color VERTEX_CENTER_FILL = new Color(205, 235, 210);
+    private static final Color VERTEX_CENTER_BORDER = new Color(90, 150, 100);
+    private static final Color VERTEX_CENTER_LABEL = new Color(40, 90, 50);
     private static final Color EDGE_COLOR = new Color(140, 150, 175);
+    private static final Color EDGE_LEAF_COLOR = new Color(210, 150, 100);
+    private static final Color EDGE_FADED_COLOR = new Color(218, 218, 222);
     private static final Color CANVAS_BORDER = new Color(200, 200, 210);
     private static final Color EMPTY_TEXT = new Color(180, 180, 195);
     private static final Font VERTEX_FONT = new Font("Segoe UI", Font.BOLD, 12);
@@ -118,6 +147,29 @@ public class GrafoCanvas extends JPanel {
         this.needsLayout = true;
         this.positions.clear();
         repaint();
+    }
+
+    /**
+     * Define el estado visual de cada vértice. Los vértices ausentes del mapa
+     * se dibujan como NORMAL. Pasar {@code null} (o llamar a
+     * {@link #clearVertexStates()}) restaura el render por defecto.
+     */
+    public void setVertexStates(Map<String, VertexState> states) {
+        this.vertexStates = (states == null) ? null : new LinkedHashMap<>(states);
+        repaint();
+    }
+
+    public void clearVertexStates() {
+        this.vertexStates = null;
+        repaint();
+    }
+
+    private VertexState stateOf(String v) {
+        if (vertexStates == null) {
+            return VertexState.NORMAL;
+        }
+        VertexState s = vertexStates.get(v);
+        return (s == null) ? VertexState.NORMAL : s;
     }
 
     /**
@@ -263,13 +315,22 @@ public class GrafoCanvas extends JPanel {
 
         // Aristas primero (debajo de los vértices)
         g2.setStroke(new BasicStroke(2f));
-        g2.setColor(EDGE_COLOR);
         for (Grafo.Arista a : grafo.getAristas()) {
             Point2D.Double p1 = positions.get(a.v1);
             Point2D.Double p2 = positions.get(a.v2);
-            if (p1 != null && p2 != null) {
-                g2.drawLine((int) p1.x, (int) p1.y, (int) p2.x, (int) p2.y);
+            if (p1 == null || p2 == null) {
+                continue;
             }
+            VertexState s1 = stateOf(a.v1);
+            VertexState s2 = stateOf(a.v2);
+            if (s1 == VertexState.FADED || s2 == VertexState.FADED) {
+                g2.setColor(EDGE_FADED_COLOR);
+            } else if (s1 == VertexState.LEAF || s2 == VertexState.LEAF) {
+                g2.setColor(EDGE_LEAF_COLOR);
+            } else {
+                g2.setColor(EDGE_COLOR);
+            }
+            g2.drawLine((int) p1.x, (int) p1.y, (int) p2.x, (int) p2.y);
         }
 
         // Vértices arriba
@@ -280,13 +341,38 @@ public class GrafoCanvas extends JPanel {
             int x = (int) (p.x - VERTEX_RADIUS);
             int y = (int) (p.y - VERTEX_RADIUS);
 
-            g2.setColor(VERTEX_FILL);
+            VertexState state = stateOf(v);
+            Color fill, border, labelColor;
+            switch (state) {
+                case LEAF:
+                    fill = VERTEX_LEAF_FILL;
+                    border = VERTEX_LEAF_BORDER;
+                    labelColor = VERTEX_LEAF_LABEL;
+                    break;
+                case FADED:
+                    fill = VERTEX_FADED_FILL;
+                    border = VERTEX_FADED_BORDER;
+                    labelColor = VERTEX_FADED_LABEL;
+                    break;
+                case CENTER:
+                    fill = VERTEX_CENTER_FILL;
+                    border = VERTEX_CENTER_BORDER;
+                    labelColor = VERTEX_CENTER_LABEL;
+                    break;
+                case NORMAL:
+                default:
+                    fill = VERTEX_FILL;
+                    border = VERTEX_BORDER;
+                    labelColor = VERTEX_LABEL;
+            }
+
+            g2.setColor(fill);
             g2.fillOval(x, y, d, d);
             g2.setStroke(new BasicStroke(1.5f));
-            g2.setColor(VERTEX_BORDER);
+            g2.setColor(border);
             g2.drawOval(x, y, d, d);
 
-            g2.setColor(VERTEX_LABEL);
+            g2.setColor(labelColor);
             g2.setFont(VERTEX_FONT);
             FontMetrics fm = g2.getFontMetrics();
             String label = v.length() > 6 ? v.substring(0, 5) + "…" : v;

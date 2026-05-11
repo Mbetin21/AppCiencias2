@@ -30,6 +30,7 @@ public class GrafosPanel extends JPanel {
     // Sub-paneles (se inicializan lazy en createContentPanel)
     private OperacionesPanel operacionesPanel;
     private ProductosPanel productosPanel;
+    private CentroPanel centroPanel;
 
     public GrafosPanel(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
@@ -343,6 +344,7 @@ public class GrafosPanel extends JPanel {
 
         operacionesPanel = new OperacionesPanel();
         productosPanel = new ProductosPanel();
+        centroPanel = new CentroPanel();
 
         loadContent("operaciones");
 
@@ -365,10 +367,7 @@ public class GrafosPanel extends JPanel {
                 content = productosPanel;
                 break;
             case "centro":
-                content = createPlaceholderPanel(
-                        "Centro y Bicentro",
-                        "Identificación del centro o bicentro de un grafo no dirigido eliminando hojas iterativamente."
-                );
+                content = centroPanel;
                 break;
             case "ordinal":
                 content = createPlaceholderPanel(
