@@ -50,6 +50,9 @@ public class GrafoCanvas extends JPanel {
     // Estados visuales por vértice (null = todos NORMAL)
     private Map<String, VertexState> vertexStates = null;
 
+    // Posiciones pendientes de aplicarse cuando el canvas tenga tamaño
+    private LinkedHashMap<String, double[]> pendingNormalized = null;
+
     private static final int VERTEX_RADIUS = 20;
     private static final Color CANVAS_BACKGROUND = new Color(252, 252, 254);
     private static final Color VERTEX_FILL = new Color(225, 232, 245);
@@ -126,6 +129,7 @@ public class GrafoCanvas extends JPanel {
         this.gridSpec = null;
         this.needsLayout = true;
         this.positions.clear();
+        this.pendingNormalized = null;
         repaint();
     }
 
@@ -146,7 +150,66 @@ public class GrafoCanvas extends JPanel {
         this.gridCols = cols;
         this.needsLayout = true;
         this.positions.clear();
+        this.pendingNormalized = null;
         repaint();
+    }
+
+    /**
+     * Devuelve las posiciones actuales como ratios [x/width, y/height] en el
+     * rango [0, 1]. Útil para transferir el layout entre canvas de distinto
+     * tamaño (por ejemplo, copiar la organización del editor al canvas de
+     * resultado). Si el canvas aún no se pintó, retorna un mapa vacío.
+     */
+    public LinkedHashMap<String, double[]> getNormalizedPositions() {
+        LinkedHashMap<String, double[]> result = new LinkedHashMap<>();
+        int w = getWidth();
+        int h = getHeight();
+        if (w <= 0 || h <= 0) {
+            return result;
+        }
+        for (Map.Entry<String, Point2D.Double> e : positions.entrySet()) {
+            result.put(e.getKey(),
+                    new double[]{e.getValue().x / w, e.getValue().y / h});
+        }
+        return result;
+    }
+
+    /**
+     * Aplica posiciones normalizadas (ratios en [0, 1]) al canvas. Las
+     * posiciones se escalan al tamaño actual del canvas. Si el canvas aún no
+     * tiene tamaño conocido, se aplican en el próximo {@code paintComponent}.
+     * Llamar después de {@link #setGrafo(Grafo)} para sobrescribir la
+     * disposición circular por defecto con un layout heredado.
+     */
+    public void setNormalizedPositions(LinkedHashMap<String, double[]> norm) {
+        if (norm == null || norm.isEmpty()) {
+            this.pendingNormalized = null;
+            return;
+        }
+        this.pendingNormalized = new LinkedHashMap<>(norm);
+        this.useGrid = false;
+        if (getWidth() > 0 && getHeight() > 0) {
+            applyPendingNormalized();
+        }
+        repaint();
+    }
+
+    private void applyPendingNormalized() {
+        if (pendingNormalized == null) {
+            return;
+        }
+        int w = getWidth();
+        int h = getHeight();
+        if (w <= 0 || h <= 0) {
+            return;
+        }
+        positions.clear();
+        for (Map.Entry<String, double[]> e : pendingNormalized.entrySet()) {
+            double[] xy = e.getValue();
+            positions.put(e.getKey(), new Point2D.Double(xy[0] * w, xy[1] * h));
+        }
+        needsLayout = false;
+        pendingNormalized = null;
     }
 
     /**
@@ -302,6 +365,10 @@ public class GrafoCanvas extends JPanel {
             int tw = fm.stringWidth(msg);
             g2.drawString(msg, (getWidth() - tw) / 2, getHeight() / 2);
             return;
+        }
+
+        if (pendingNormalized != null) {
+            applyPendingNormalized();
         }
 
         if (needsLayout) {

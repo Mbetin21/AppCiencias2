@@ -151,36 +151,40 @@ public class CentroPanel extends JPanel {
         panel.add(canvasG);
         panel.add(Box.createVerticalStrut(10));
 
-        // Entrada de vértices y aristas (una sola fila, ancho completo)
-        JPanel inputs = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        inputs.setBackground(PANEL_COLOR);
-        inputs.setAlignmentX(Component.LEFT_ALIGNMENT);
-        inputs.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-
-        inputs.add(createInlineLabel("Vértices:"));
-        vertField = new JTextField(10);
+        // Fila 1: vértices (Agregar / Eliminar comparten campo)
+        JPanel vRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        vRow.setBackground(PANEL_COLOR);
+        vRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        vRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        vRow.add(createInlineLabel("Vértices:"));
+        vertField = new JTextField(12);
         vertField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        inputs.add(vertField);
+        vRow.add(vertField);
         JButton addVBtn = createSmallButton("Agregar", false);
-        inputs.add(addVBtn);
+        JButton delVBtn = createSmallButton("Eliminar", false);
+        vRow.add(addVBtn);
+        vRow.add(delVBtn);
+        panel.add(vRow);
+        panel.add(Box.createVerticalStrut(5));
 
-        inputs.add(Box.createHorizontalStrut(15));
-        inputs.add(createInlineLabel("Arista:"));
+        // Fila 2: arista
+        JPanel eRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        eRow.setBackground(PANEL_COLOR);
+        eRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        eRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        eRow.add(createInlineLabel("Arista:"));
         edgeFrom = new JTextField(4);
         edgeFrom.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        inputs.add(edgeFrom);
-        inputs.add(createInlineLabel("—"));
+        eRow.add(edgeFrom);
+        eRow.add(createInlineLabel("—"));
         edgeTo = new JTextField(4);
         edgeTo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        inputs.add(edgeTo);
+        eRow.add(edgeTo);
         JButton addEBtn = createSmallButton("Agregar", false);
-        inputs.add(addEBtn);
-
-        inputs.add(Box.createHorizontalStrut(15));
-        JButton clearBtn = createSmallButton("Limpiar", false);
-        inputs.add(clearBtn);
-
-        panel.add(inputs);
+        JButton delEBtn = createSmallButton("Eliminar", false);
+        eRow.add(addEBtn);
+        eRow.add(delEBtn);
+        panel.add(eRow);
         panel.add(Box.createVerticalStrut(8));
 
         verticesGLabel = new JLabel(g.getVerticesStr());
@@ -194,12 +198,24 @@ public class CentroPanel extends JPanel {
         panel.add(verticesGLabel);
         panel.add(Box.createVerticalStrut(2));
         panel.add(aristasGLabel);
+        panel.add(Box.createVerticalStrut(8));
+
+        // Fila 3: acciones
+        JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        actionRow.setBackground(PANEL_COLOR);
+        actionRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        actionRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        JButton clearBtn = createSmallButton("Limpiar", false);
+        actionRow.add(clearBtn);
+        panel.add(actionRow);
 
         // Acciones
         addVBtn.addActionListener(e -> handleAddVertex());
         vertField.addActionListener(e -> addVBtn.doClick());
+        delVBtn.addActionListener(e -> handleDeleteVertex());
         addEBtn.addActionListener(e -> handleAddEdge());
         edgeTo.addActionListener(e -> addEBtn.doClick());
+        delEBtn.addActionListener(e -> handleDeleteEdge());
         clearBtn.addActionListener(e -> handleLimpiar());
 
         return panel;
@@ -258,8 +274,8 @@ public class CentroPanel extends JPanel {
         iteracionLabel.setForeground(TEXT_PRIMARY);
         navRow.add(iteracionLabel);
 
-        prevBtn = createSmallButton("◀", false);
-        nextBtn = createSmallButton("▶", false);
+        prevBtn = createSmallButton("Anterior", false);
+        nextBtn = createSmallButton("Siguiente", false);
         prevBtn.setEnabled(false);
         nextBtn.setEnabled(false);
         navRow.add(prevBtn);
@@ -346,7 +362,32 @@ public class CentroPanel extends JPanel {
             canvasG.refresh();
             verticesGLabel.setText(g.getVerticesStr());
             aristasGLabel.setText(g.getAristasStr());
+            invalidateResult();
             setStatus("Vértices agregados a G.", false);
+        } catch (IllegalArgumentException ex) {
+            setStatus(ex.getMessage(), true);
+        }
+    }
+
+    private void handleDeleteVertex() {
+        String entrada = vertField.getText().trim();
+        if (entrada.isEmpty()) {
+            setStatus("Escriba el o los vértices a eliminar (separados por coma).", true);
+            return;
+        }
+        try {
+            for (String parte : entrada.split(",")) {
+                String v = parte.trim();
+                if (!v.isEmpty()) {
+                    g.eliminarVertice(v);
+                }
+            }
+            vertField.setText("");
+            canvasG.refresh();
+            verticesGLabel.setText(g.getVerticesStr());
+            aristasGLabel.setText(g.getAristasStr());
+            invalidateResult();
+            setStatus("Vértice(s) eliminado(s) de G.", false);
         } catch (IllegalArgumentException ex) {
             setStatus(ex.getMessage(), true);
         }
@@ -366,7 +407,29 @@ public class CentroPanel extends JPanel {
             canvasG.refresh();
             verticesGLabel.setText(g.getVerticesStr());
             aristasGLabel.setText(g.getAristasStr());
+            invalidateResult();
             setStatus("Arista " + v1 + "—" + v2 + " agregada a G.", false);
+        } catch (IllegalArgumentException ex) {
+            setStatus(ex.getMessage(), true);
+        }
+    }
+
+    private void handleDeleteEdge() {
+        String v1 = edgeFrom.getText().trim();
+        String v2 = edgeTo.getText().trim();
+        if (v1.isEmpty() || v2.isEmpty()) {
+            setStatus("Indique los dos extremos de la arista a eliminar.", true);
+            return;
+        }
+        try {
+            g.eliminarArista(v1, v2);
+            edgeFrom.setText("");
+            edgeTo.setText("");
+            canvasG.refresh();
+            verticesGLabel.setText(g.getVerticesStr());
+            aristasGLabel.setText(g.getAristasStr());
+            invalidateResult();
+            setStatus("Arista " + v1 + "—" + v2 + " eliminada de G.", false);
         } catch (IllegalArgumentException ex) {
             setStatus(ex.getMessage(), true);
         }
@@ -377,7 +440,29 @@ public class CentroPanel extends JPanel {
         canvasG.setGrafo(g);
         verticesGLabel.setText(g.getVerticesStr());
         aristasGLabel.setText(g.getAristasStr());
+        invalidateResult();
         setStatus("G vaciado.", false);
+    }
+
+    /**
+     * Restablece la sección de resultado a su estado inicial. Se llama
+     * después de cualquier edición sobre G para evitar mostrar un resultado
+     * obsoleto.
+     */
+    private void invalidateResult() {
+        if (resultado == null) {
+            return;
+        }
+        resultado = null;
+        currentIter = 0;
+        canvasResultado.setGrafo(null);
+        canvasResultado.clearVertexStates();
+        resultadoTituloLabel.setText("Resultado");
+        iteracionLabel.setText("Iteración —");
+        verticesIterLabel.setText("S = {}");
+        hojasIterLabel.setText("Hojas eliminadas en este paso: —");
+        traceArea.setText("");
+        actualizarNavBotones();
     }
 
     // -------------------- HANDLER DE CÁLCULO --------------------
@@ -395,6 +480,14 @@ public class CentroPanel extends JPanel {
             // Snapshot del grafo para el canvas de resultado (independiente de G)
             Grafo snapshot = clonarGrafo(g);
             canvasResultado.setGrafo(snapshot);
+
+            // Heredar la disposición del editor (posiciones que el usuario
+            // pudo haber arrastrado) para que el resultado refleje el mismo
+            // layout, no uno circular nuevo.
+            LinkedHashMap<String, double[]> editorPos = canvasG.getNormalizedPositions();
+            if (!editorPos.isEmpty()) {
+                canvasResultado.setNormalizedPositions(editorPos);
+            }
 
             resultadoTituloLabel.setText("Resultado · " + tituloResultado(res));
             traceArea.setText(construirTrace(res));
