@@ -333,10 +333,10 @@ public class OperacionesPanel extends JPanel {
         row.setBackground(PANEL_COLOR);
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton unionBtn = createSmallButton("G1 ∪ G2", true);
-        JButton interBtn = createSmallButton("G1 ∩ G2", true);
-        JButton anilloBtn = createSmallButton("G1 ⊕ G2", true);
-        JButton sumaBtn = createSmallButton("G1 + G2", true);
+        JButton unionBtn = createSmallButton("Union", true);
+        JButton interBtn = createSmallButton("Interseccion", true);
+        JButton anilloBtn = createSmallButton("Suma anillo", true);
+        JButton sumaBtn = createSmallButton("Suma", true);
         row.add(unionBtn);
         row.add(interBtn);
         row.add(anilloBtn);
