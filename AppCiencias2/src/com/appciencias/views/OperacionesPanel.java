@@ -160,14 +160,16 @@ public class OperacionesPanel extends JPanel {
         panel.add(canvas);
         panel.add(Box.createVerticalStrut(10));
 
-        // Fila vértice
+        // Fila vértice (Agregar / Eliminar comparten campo)
         JPanel vRow = createInputRow();
         vRow.add(createInlineLabel("Vértices:"));
-        JTextField vField = new JTextField(10);
+        JTextField vField = new JTextField(8);
         vField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         vRow.add(vField);
         JButton addVBtn = createSmallButton("Agregar", false);
+        JButton delVBtn = createSmallButton("Eliminar", false);
         vRow.add(addVBtn);
+        vRow.add(delVBtn);
         if (isG1) {
             vertFieldG1 = vField;
         } else {
@@ -179,15 +181,17 @@ public class OperacionesPanel extends JPanel {
         // Fila arista
         JPanel eRow = createInputRow();
         eRow.add(createInlineLabel("Arista:"));
-        JTextField eFrom = new JTextField(4);
+        JTextField eFrom = new JTextField(3);
         eFrom.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         eRow.add(eFrom);
         eRow.add(createInlineLabel("—"));
-        JTextField eTo = new JTextField(4);
+        JTextField eTo = new JTextField(3);
         eTo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         eRow.add(eTo);
         JButton addEBtn = createSmallButton("Agregar", false);
+        JButton delEBtn = createSmallButton("Eliminar", false);
         eRow.add(addEBtn);
+        eRow.add(delEBtn);
         if (isG1) {
             edgeFromG1 = eFrom;
             edgeToG1 = eTo;
@@ -231,10 +235,14 @@ public class OperacionesPanel extends JPanel {
         addVBtn.addActionListener(e -> handleAddVertex(grafo, vField, canvas,
                 vCount, aCount, etiqueta));
         vField.addActionListener(e -> addVBtn.doClick());
+        delVBtn.addActionListener(e -> handleDeleteVertex(grafo, vField, canvas,
+                vCount, aCount, etiqueta));
 
         addEBtn.addActionListener(e -> handleAddEdge(grafo, eFrom, eTo, canvas,
                 vCount, aCount, etiqueta));
         eTo.addActionListener(e -> addEBtn.doClick());
+        delEBtn.addActionListener(e -> handleDeleteEdge(grafo, eFrom, eTo, canvas,
+                vCount, aCount, etiqueta));
 
         complBtn.addActionListener(e -> handleComplemento(grafo, etiqueta));
         clearBtn.addActionListener(e -> handleLimpiar(grafo, canvas, vCount,
@@ -422,7 +430,33 @@ public class OperacionesPanel extends JPanel {
             canvas.refresh();
             vLabel.setText(grafo.getVerticesStr());
             aLabel.setText(grafo.getAristasStr());
+            invalidateResult();
             setStatus("Vértices agregados a " + etiqueta + ".", false);
+        } catch (IllegalArgumentException ex) {
+            setStatus(ex.getMessage(), true);
+        }
+    }
+
+    private void handleDeleteVertex(Grafo grafo, JTextField field, GrafoCanvas canvas,
+                                    JLabel vLabel, JLabel aLabel, String etiqueta) {
+        String entrada = field.getText().trim();
+        if (entrada.isEmpty()) {
+            setStatus("Escriba el o los vértices a eliminar (separados por coma).", true);
+            return;
+        }
+        try {
+            for (String parte : entrada.split(",")) {
+                String v = parte.trim();
+                if (!v.isEmpty()) {
+                    grafo.eliminarVertice(v);
+                }
+            }
+            field.setText("");
+            canvas.refresh();
+            vLabel.setText(grafo.getVerticesStr());
+            aLabel.setText(grafo.getAristasStr());
+            invalidateResult();
+            setStatus("Vértice(s) eliminado(s) de " + etiqueta + ".", false);
         } catch (IllegalArgumentException ex) {
             setStatus(ex.getMessage(), true);
         }
@@ -444,7 +478,31 @@ public class OperacionesPanel extends JPanel {
             canvas.refresh();
             vLabel.setText(grafo.getVerticesStr());
             aLabel.setText(grafo.getAristasStr());
+            invalidateResult();
             setStatus("Arista " + v1 + "—" + v2 + " agregada a " + etiqueta + ".", false);
+        } catch (IllegalArgumentException ex) {
+            setStatus(ex.getMessage(), true);
+        }
+    }
+
+    private void handleDeleteEdge(Grafo grafo, JTextField from, JTextField to,
+                                  GrafoCanvas canvas, JLabel vLabel, JLabel aLabel,
+                                  String etiqueta) {
+        String v1 = from.getText().trim();
+        String v2 = to.getText().trim();
+        if (v1.isEmpty() || v2.isEmpty()) {
+            setStatus("Indique los dos extremos de la arista a eliminar.", true);
+            return;
+        }
+        try {
+            grafo.eliminarArista(v1, v2);
+            from.setText("");
+            to.setText("");
+            canvas.refresh();
+            vLabel.setText(grafo.getVerticesStr());
+            aLabel.setText(grafo.getAristasStr());
+            invalidateResult();
+            setStatus("Arista " + v1 + "—" + v2 + " eliminada de " + etiqueta + ".", false);
         } catch (IllegalArgumentException ex) {
             setStatus(ex.getMessage(), true);
         }
@@ -457,6 +515,14 @@ public class OperacionesPanel extends JPanel {
         }
         Grafo complemento = grafo.complemento();
         mostrarResultado("Complemento de " + etiqueta, complemento);
+
+        // Heredar el layout del editor fuente (mismos vértices)
+        GrafoCanvas fuente = (grafo == g1) ? canvasG1 : canvasG2;
+        java.util.LinkedHashMap<String, double[]> pos = fuente.getNormalizedPositions();
+        if (!pos.isEmpty()) {
+            canvasResultado.setNormalizedPositions(pos);
+        }
+
         setStatus("Complemento de " + etiqueta + " calculado.", false);
     }
 
@@ -466,6 +532,7 @@ public class OperacionesPanel extends JPanel {
         canvas.setGrafo(grafo);
         vLabel.setText(grafo.getVerticesStr());
         aLabel.setText(grafo.getAristasStr());
+        invalidateResult();
         setStatus(etiqueta + " vaciado.", false);
     }
 
@@ -483,6 +550,7 @@ public class OperacionesPanel extends JPanel {
             actualizarCanvasYLabels(objetivo);
             unaryV1Field.setText("");
             unaryV2Field.setText("");
+            invalidateResult();
             setStatus("Vértices " + v1 + " y " + v2 + " fusionados en " + etiqueta + ".", false);
         } catch (IllegalArgumentException ex) {
             setStatus(ex.getMessage(), true);
@@ -503,6 +571,7 @@ public class OperacionesPanel extends JPanel {
             actualizarCanvasYLabels(objetivo);
             unaryV1Field.setText("");
             unaryV2Field.setText("");
+            invalidateResult();
             setStatus("Arista " + v1 + "—" + v2 + " contraída en " + etiqueta + ".", false);
         } catch (IllegalArgumentException ex) {
             setStatus(ex.getMessage(), true);
@@ -524,13 +593,31 @@ public class OperacionesPanel extends JPanel {
         aristasResultadoLabel.setText(res.getAristasStr());
     }
 
+    /**
+     * Restablece la sección de resultado a su estado vacío. Se llama
+     * después de cualquier edición sobre G1 o G2 para evitar mostrar un
+     * resultado obsoleto.
+     */
+    private void invalidateResult() {
+        if (resultado == null) {
+            return;
+        }
+        resultado = null;
+        canvasResultado.setGrafo(null);
+        resultadoTituloLabel.setText("Resultado");
+        verticesResultadoLabel.setText("S = {}");
+        aristasResultadoLabel.setText("A = {}");
+    }
+
     private void actualizarCanvasYLabels(Grafo grafo) {
+        // refresh() preserva las posiciones que el usuario ya arrastró y
+        // sólo agrega/quita según el nuevo conjunto de vértices.
         if (grafo == g1) {
-            canvasG1.setGrafo(g1);
+            canvasG1.refresh();
             verticesG1Label.setText(g1.getVerticesStr());
             aristasG1Label.setText(g1.getAristasStr());
         } else {
-            canvasG2.setGrafo(g2);
+            canvasG2.refresh();
             verticesG2Label.setText(g2.getVerticesStr());
             aristasG2Label.setText(g2.getAristasStr());
         }
