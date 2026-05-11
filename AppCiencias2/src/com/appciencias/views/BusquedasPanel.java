@@ -283,7 +283,9 @@ public class BusquedasPanel extends JPanel {
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
-        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        button.setPreferredSize(new Dimension(0, 50));
+        button.setMinimumSize(new Dimension(0, 50));
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         
         // Efecto hover
         button.addMouseListener(new java.awt.event.MouseAdapter() {

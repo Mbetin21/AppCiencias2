@@ -251,7 +251,9 @@ public class GrafosPanel extends JPanel {
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
-        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        button.setPreferredSize(new Dimension(0, 50));
+        button.setMinimumSize(new Dimension(0, 50));
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
