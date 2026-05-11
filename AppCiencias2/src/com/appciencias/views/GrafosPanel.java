@@ -29,6 +29,7 @@ public class GrafosPanel extends JPanel {
 
     // Sub-paneles (se inicializan lazy en createContentPanel)
     private OperacionesPanel operacionesPanel;
+    private ProductosPanel productosPanel;
 
     public GrafosPanel(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
@@ -341,6 +342,7 @@ public class GrafosPanel extends JPanel {
         contentPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
         operacionesPanel = new OperacionesPanel();
+        productosPanel = new ProductosPanel();
 
         loadContent("operaciones");
 
@@ -360,10 +362,7 @@ public class GrafosPanel extends JPanel {
                 content = operacionesPanel;
                 break;
             case "productos":
-                content = createPlaceholderPanel(
-                        "Productos de Grafos",
-                        "Producto cartesiano (×), producto tensorial (⊗) y composición G1[G2] entre dos grafos no dirigidos."
-                );
+                content = productosPanel;
                 break;
             case "centro":
                 content = createPlaceholderPanel(

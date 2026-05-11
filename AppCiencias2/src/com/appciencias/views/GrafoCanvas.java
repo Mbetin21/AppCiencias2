@@ -25,6 +25,13 @@ public class GrafoCanvas extends JPanel {
     private final Point dragOffset = new Point();
     private boolean needsLayout = true;
 
+    // Disposición opcional en cuadrícula (usada por productos, donde
+    // los vértices son pares (u, v) con estructura natural fila/columna).
+    private boolean useGrid = false;
+    private LinkedHashMap<String, int[]> gridSpec = null;
+    private int gridRows = 0;
+    private int gridCols = 0;
+
     private static final int VERTEX_RADIUS = 20;
     private static final Color CANVAS_BACKGROUND = new Color(252, 252, 254);
     private static final Color VERTEX_FILL = new Color(225, 232, 245);
@@ -86,6 +93,28 @@ public class GrafoCanvas extends JPanel {
      */
     public void setGrafo(Grafo g) {
         this.grafo = g;
+        this.useGrid = false;
+        this.gridSpec = null;
+        this.needsLayout = true;
+        this.positions.clear();
+        repaint();
+    }
+
+    /**
+     * Asigna un grafo cuyos vértices se colocan en una cuadrícula de filas ×
+     * columnas. El mapa {@code spec} asocia cada vértice con su par
+     * {@code [fila, columna]}. Útil para grafos producto donde el orden
+     * fila/columna refleja la estructura del producto y reduce cruces de
+     * aristas frente a la disposición circular. El usuario puede arrastrar
+     * los vértices después igual que en modo circular.
+     */
+    public void setGrafoEnCuadricula(Grafo g, LinkedHashMap<String, int[]> spec,
+                                     int rows, int cols) {
+        this.grafo = g;
+        this.useGrid = true;
+        this.gridSpec = spec;
+        this.gridRows = rows;
+        this.gridCols = cols;
         this.needsLayout = true;
         this.positions.clear();
         repaint();
@@ -131,6 +160,34 @@ public class GrafoCanvas extends JPanel {
             }
         }
         repaint();
+    }
+
+    private void gridLayout() {
+        if (gridSpec == null || gridRows <= 0 || gridCols <= 0) {
+            return;
+        }
+        int w = getWidth();
+        int h = getHeight();
+        if (w <= 0 || h <= 0) {
+            return;
+        }
+        int padX = Math.max(45, VERTEX_RADIUS * 2 + 8);
+        int padY = Math.max(35, VERTEX_RADIUS * 2 + 8);
+
+        double cellW = (gridCols <= 1) ? 0 : (double) (w - 2 * padX) / (gridCols - 1);
+        double cellH = (gridRows <= 1) ? 0 : (double) (h - 2 * padY) / (gridRows - 1);
+
+        double startX = (gridCols <= 1) ? w / 2.0 : padX;
+        double startY = (gridRows <= 1) ? h / 2.0 : padY;
+
+        positions.clear();
+        for (Map.Entry<String, int[]> e : gridSpec.entrySet()) {
+            int row = e.getValue()[0];
+            int col = e.getValue()[1];
+            double x = startX + cellW * col;
+            double y = startY + cellH * row;
+            positions.put(e.getKey(), new Point2D.Double(x, y));
+        }
     }
 
     private void circularLayout() {
@@ -196,7 +253,11 @@ public class GrafoCanvas extends JPanel {
         }
 
         if (needsLayout) {
-            circularLayout();
+            if (useGrid) {
+                gridLayout();
+            } else {
+                circularLayout();
+            }
             needsLayout = false;
         }
 
