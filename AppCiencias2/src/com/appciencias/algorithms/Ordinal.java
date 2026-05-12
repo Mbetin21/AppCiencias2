@@ -7,6 +7,10 @@ import java.util.LinkedHashMap;
  * Numeracion Ordinal de vertices de un grafo.
  *
  * No dirigido: se numeran en el orden en que fueron ingresados (izq a derecha).
+ *
+ * Dirigido: ordenamiento topologico por predecesores. Si el grafo tiene ciclos,
+ * los vertices del ciclo se numeran en orden de insercion al final y se marca
+ * tieneCiclo = true.
  */
 public class Ordinal {
 
@@ -15,9 +19,9 @@ public class Ordinal {
      */
     public static class Paso {
 
-        public final int numero;      // numero ordinal asignado
-        public final String vertice;  // vertice que recibio ese numero
-        public final String motivo;   // por que se numeró en este paso
+        public final int numero;
+        public final String vertice;
+        public final String motivo;
 
         public Paso(int numero, String vertice, String motivo) {
             this.numero = numero;
@@ -36,19 +40,19 @@ public class Ordinal {
      */
     public static class Resultado {
 
-        // Mapa vertice -> numero ordinal asignado (en orden de asignacion)
         public final LinkedHashMap<String, Integer> numeracion;
-        // Pasos del proceso para mostrar al usuario
         public final ArrayList<Paso> pasos;
-        // true si el grafo es dirigido
         public final boolean dirigido;
+        public final boolean tieneCiclo; // true si se detecto un ciclo en el grafo
 
         public Resultado(LinkedHashMap<String, Integer> numeracion,
                 ArrayList<Paso> pasos,
-                boolean dirigido) {
+                boolean dirigido,
+                boolean tieneCiclo) {
             this.numeracion = new LinkedHashMap<>(numeracion);
             this.pasos = new ArrayList<>(pasos);
             this.dirigido = dirigido;
+            this.tieneCiclo = tieneCiclo;
         }
 
         @Override
@@ -57,6 +61,11 @@ public class Ordinal {
             sb.append("=== NUMERACIÓN ORDINAL (")
                     .append(dirigido ? "DIRIGIDO" : "NO DIRIGIDO")
                     .append(") ===\n\n");
+
+            if (tieneCiclo) {
+                sb.append("⚠ Advertencia: el grafo tiene un ciclo. "
+                        + "Los vértices del ciclo se numeraron por orden de inserción.\n\n");
+            }
 
             if (dirigido) {
                 sb.append("--- Paso a paso ---\n");
@@ -75,8 +84,7 @@ public class Ordinal {
     }
 
     // =====================================================================
-    //  NO DIRIGIDO — Grafo.java
-    //  Numeracion en orden de insercion (izquierda a derecha)
+    //  NO DIRIGIDO
     // =====================================================================
     /**
      * Numeracion ordinal para grafo NO dirigido. Los vertices se numeran en el
@@ -84,7 +92,6 @@ public class Ordinal {
      *
      * @param grafo Grafo no dirigido (Grafo.java).
      * @return Resultado con la numeracion.
-     * @throws IllegalArgumentException si el grafo esta vacio.
      */
     public static Resultado calcularNoDirigido(Grafo grafo) {
         if (grafo == null || grafo.getNumVertices() == 0) {
@@ -102,12 +109,11 @@ public class Ordinal {
             num++;
         }
 
-        return new Resultado(numeracion, pasos, false);
+        return new Resultado(numeracion, pasos, false, false);
     }
 
     // =====================================================================
-    //  DIRIGIDO — GrafoPonderado.java
-    //  Ordenamiento topologico por predecesores
+    //  DIRIGIDO
     // =====================================================================
     /**
      * Numeracion ordinal para grafo DIRIGIDO (GrafoPonderado).
@@ -115,12 +121,11 @@ public class Ordinal {
      * Algoritmo: 1. Buscar nodos sin predecesor (nadie apunta hacia ellos). 2.
      * Numerarlos uno por uno en orden de aparicion. 3. Marcarlos como numerados
      * y repetir: un nodo puede numerarse cuando todos sus predecesores ya estan
-     * numerados. 4. Continuar hasta numerar todos los nodos.
+     * numerados. 4. Si no hay candidatos (hay ciclo), numerar los restantes en
+     * orden de insercion y marcar tieneCiclo = true.
      *
      * @param grafo Grafo dirigido ponderado.
-     * @return Resultado con la numeracion y el paso a paso.
-     * @throws IllegalArgumentException si el grafo esta vacio o tiene ciclos
-     * (no se puede hacer ordenamiento topologico).
+     * @return Resultado con la numeracion, el paso a paso y flag de ciclo.
      */
     public static Resultado calcularDirigido(GrafoPonderado grafo) {
         if (grafo == null || grafo.getNumVertices() == 0) {
@@ -132,28 +137,26 @@ public class Ordinal {
 
         LinkedHashMap<String, Integer> numeracion = new LinkedHashMap<>();
         ArrayList<Paso> pasos = new ArrayList<>();
-        ArrayList<String> numerados = new ArrayList<>(); // ya tienen numero asignado
+        ArrayList<String> numerados = new ArrayList<>();
 
         int num = 1;
-        int maxIteraciones = vertices.size(); // evitar loop infinito si hay ciclo
+        boolean cicloDetectado = false;
 
         while (numerados.size() < vertices.size()) {
-            // Buscar candidatos: vertices no numerados cuyo todos los predecesores
-            // ya estan numerados (o no tienen predecesores)
+
+            // Buscar candidatos: vertices cuyos predecesores ya estan todos numerados
             ArrayList<String> candidatos = new ArrayList<>();
 
             for (String v : vertices) {
                 if (numerados.contains(v)) {
-                    continue; // ya numerado
+                    continue;
                 }
-                // Obtener predecesores de v (nodos que tienen arista hacia v)
+
                 ArrayList<String> predecesores = getPredecesores(v, aristas);
 
                 if (predecesores.isEmpty()) {
-                    // Sin predecesor -> candidato directo
                     candidatos.add(v);
                 } else {
-                    // Tiene predecesores -> candidato solo si TODOS ya estan numerados
                     boolean todosNumerados = true;
                     for (String pred : predecesores) {
                         if (!numerados.contains(pred)) {
@@ -167,29 +170,28 @@ public class Ordinal {
                 }
             }
 
-            // Si no hay candidatos y quedan vertices sin numerar -> hay ciclo
+            // Si no hay candidatos -> hay ciclo
             if (candidatos.isEmpty()) {
-                ArrayList<String> sinNumerar = new ArrayList<>();
+                cicloDetectado = true;
+                // Numerar restantes en orden de insercion
                 for (String v : vertices) {
                     if (!numerados.contains(v)) {
-                        sinNumerar.add(v);
+                        numeracion.put(v, num);
+                        pasos.add(new Paso(num, v,
+                                "ciclo detectado — numerado por orden de inserción"));
+                        numerados.add(v);
+                        num++;
                     }
                 }
-                throw new IllegalArgumentException(
-                        "El grafo tiene un ciclo. No se puede hacer ordenamiento topológico. "
-                        + "Vértices sin numerar: " + sinNumerar.toString());
+                break;
             }
 
-            // Numerar candidatos uno por uno en orden de aparicion en el grafo
+            // Numerar candidatos uno por uno en orden de aparicion
             for (String candidato : candidatos) {
                 ArrayList<String> predecesores = getPredecesores(candidato, aristas);
-
-                String motivo;
-                if (predecesores.isEmpty()) {
-                    motivo = "sin predecesor";
-                } else {
-                    motivo = "predecesores " + predecesores.toString() + " ya numerados";
-                }
+                String motivo = predecesores.isEmpty()
+                        ? "sin predecesor"
+                        : "predecesores " + predecesores.toString() + " ya numerados";
 
                 numeracion.put(candidato, num);
                 pasos.add(new Paso(num, candidato, motivo));
@@ -198,7 +200,7 @@ public class Ordinal {
             }
         }
 
-        return new Resultado(numeracion, pasos, true);
+        return new Resultado(numeracion, pasos, true, cicloDetectado);
     }
 
     /**
