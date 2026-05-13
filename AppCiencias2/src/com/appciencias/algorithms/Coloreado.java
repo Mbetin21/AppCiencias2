@@ -5,10 +5,11 @@ import com.appciencias.models.Grafo;
 import java.util.*;
 
 /**
- * Coloreado.java Coloreado de vértices (χ(G)) y aristas (χ'(G)) + Polinomio
- * Cromático. Opera sobre Grafo (no dirigido, sin pesos).
+ * ColoracionGrafo.java
+ * Coloreado de vértices (χ(G)) y aristas (χ'(G)) + Polinomio Cromático.
+ * Opera sobre Grafo (no dirigido, sin pesos).
  */
-public class Coloreado {
+public class ColoracionGrafo {
 
     // =========================================================
     //  LÍMITE INTERNO DE FORMAS
@@ -26,26 +27,15 @@ public class Coloreado {
     //  RESULTADO — POLINOMIO CROMÁTICO
     // =========================================================
     public static class ResultadoPolinomio {
-
-        /**
-         * Tipo detectado
-         */
+        /** Tipo detectado */
         public TipoGrafo tipo;
-        /**
-         * Expresión simbólica del polinomio, ej: "λ(λ-1)^4"
-         */
+        /** Expresión simbólica del polinomio, ej: "λ(λ-1)^4" */
         public String expresion;
-        /**
-         * Pasos/explicación de cómo se obtuvo
-         */
+        /** Pasos/explicación de cómo se obtuvo */
         public List<String> pasos = new ArrayList<>();
-        /**
-         * Evaluaciones P(G, λ) para λ = 1 .. n+2
-         */
+        /** Evaluaciones P(G, λ) para λ = 1 .. n+2 */
         public Map<Integer, Long> evaluaciones = new LinkedHashMap<>();
-        /**
-         * Número cromático (menor λ > 0 con evaluación > 0)
-         */
+        /** Número cromático (menor λ > 0 con evaluación > 0) */
         public int numeroCromatico;
     }
 
@@ -53,22 +43,13 @@ public class Coloreado {
     //  RESULTADO — COLORACIÓN DE VÉRTICES
     // =========================================================
     public static class ResultadoColoracion {
-
-        /**
-         * vertice → índice de color (0-based)
-         */
+        /** vertice → índice de color (0-based) */
         public Map<String, Integer> asignacion = new LinkedHashMap<>();
-        /**
-         * Número cromático χ(G)
-         */
+        /** Número cromático χ(G) */
         public int numeroCromatico;
-        /**
-         * color → lista de vértices (clases cromáticas)
-         */
+        /** color → lista de vértices (clases cromáticas) */
         public Map<Integer, List<String>> clasesCromaticas = new LinkedHashMap<>();
-        /**
-         * Todas las formas válidas (máx MAX_FORMAS)
-         */
+        /** Todas las formas válidas (máx MAX_FORMAS) */
         public List<Map<String, Integer>> todasLasFormas = new ArrayList<>();
     }
 
@@ -76,37 +57,26 @@ public class Coloreado {
     //  RESULTADO — COLORACIÓN DE ARISTAS
     // =========================================================
     public static class ResultadoColoracionAristas {
-
-        /**
-         * "v1-v2" → índice de color (0-based)
-         */
+        /** "v1-v2" → índice de color (0-based) */
         public Map<String, Integer> asignacionAristas = new LinkedHashMap<>();
-        /**
-         * Índice cromático χ'(G)
-         */
+        /** Índice cromático χ'(G) */
         public int indiceCromatico;
-        /**
-         * color → lista de aristas
-         */
+        /** color → lista de aristas */
         public Map<Integer, List<String>> clasesCromaticasAristas = new LinkedHashMap<>();
-        /**
-         * Todas las formas válidas (máx MAX_FORMAS)
-         */
+        /** Todas las formas válidas (máx MAX_FORMAS) */
         public List<Map<String, Integer>> todasLasFormasAristas = new ArrayList<>();
     }
 
     // =========================================================
     //  API PÚBLICA
     // =========================================================
-    /**
-     * Calcula el polinomio cromático del grafo.
-     */
+
+    /** Calcula el polinomio cromático del grafo. */
     public static ResultadoPolinomio calcularPolinomio(Grafo grafo) {
         List<String> vertices = new ArrayList<>(grafo.getVertices());
         Map<String, Set<String>> ady = construirAdyacencia(grafo, vertices);
         int n = vertices.size();
-        List<String[]> aristas = obtenerAristas(ady, vertices);
-        int m = aristas.size();
+        int m = grafo.getNumAristas();
 
         ResultadoPolinomio res = new ResultadoPolinomio();
 
@@ -143,17 +113,13 @@ public class Coloreado {
         } else if (esCompleto(n, m)) {
             res.tipo = TipoGrafo.COMPLETO;
             StringBuilder sb = new StringBuilder("λ");
-            for (int i = 1; i < n; i++) {
-                sb.append("(λ-").append(i).append(")");
-            }
+            for (int i = 1; i < n; i++) sb.append("(λ-").append(i).append(")");
             res.expresion = sb.toString();
             res.pasos.add("Grafo detectado: COMPLETO (K" + n + ", |A| = n(n-1)/2 = " + m + ").");
             res.pasos.add("Fórmula directa: P(G,λ) = λ(λ-1)(λ-2)···(λ-" + (n - 1) + ")");
             for (int lam = 1; lam <= n + 2; lam++) {
                 long val = 1;
-                for (int i = 0; i < n; i++) {
-                    val *= (lam - i);
-                }
+                for (int i = 0; i < n; i++) val *= (lam - i);
                 res.evaluaciones.put(lam, val);
             }
         } else {
@@ -177,23 +143,19 @@ public class Coloreado {
 
         // Número cromático: menor λ >= 1 con evaluación > 0
         res.numeroCromatico = calcularNumeroCromatico(res.evaluaciones);
-        res.pasos.add("Número cromático χ(G) = " + res.numeroCromatico
-                + " (menor λ con P(G,λ) > 0).");
+        res.pasos.add("Número cromático χ(G) = " + res.numeroCromatico +
+                " (menor λ con P(G,λ) > 0).");
         return res;
     }
 
-    /**
-     * Coloración greedy de vértices + todas las formas válidas.
-     */
+    /** Coloración greedy de vértices + todas las formas válidas. */
     public static ResultadoColoracion colorarVertices(Grafo grafo) {
         List<String> vertices = new ArrayList<>(grafo.getVertices());
         Map<String, Set<String>> ady = construirAdyacencia(grafo, vertices);
         int n = vertices.size();
 
         ResultadoColoracion res = new ResultadoColoracion();
-        if (n == 0) {
-            return res;
-        }
+        if (n == 0) return res;
 
         // Greedy para obtener número cromático mínimo
         int[] asignGreedy = greedy(vertices, ady);
@@ -217,18 +179,14 @@ public class Coloreado {
         return res;
     }
 
-    /**
-     * Coloración greedy de aristas + todas las formas válidas.
-     */
+    /** Coloración greedy de aristas + todas las formas válidas. */
     public static ResultadoColoracionAristas colorarAristas(Grafo grafo) {
         List<String> vertices = new ArrayList<>(grafo.getVertices());
         Map<String, Set<String>> ady = construirAdyacencia(grafo, vertices);
         List<String[]> aristas = obtenerAristas(ady, vertices);
 
         ResultadoColoracionAristas res = new ResultadoColoracionAristas();
-        if (aristas.isEmpty()) {
-            return res;
-        }
+        if (aristas.isEmpty()) return res;
 
         // Greedy sobre aristas
         int[] asignGreedy = greedyAristas(aristas, vertices, ady);
@@ -254,24 +212,19 @@ public class Coloreado {
     // =========================================================
     //  DETECCIÓN DE TIPO DE GRAFO
     // =========================================================
+
     private static boolean esArbol(int n, int m,
-            Map<String, Set<String>> ady,
-            List<String> vertices) {
-        if (m != n - 1) {
-            return false;
-        }
+                                    Map<String, Set<String>> ady,
+                                    List<String> vertices) {
+        if (m != n - 1) return false;
         return esConexo(ady, vertices);
     }
 
     private static boolean esCiclo(int n, int m, Map<String, Set<String>> ady) {
-        if (m != n) {
-            return false;
-        }
+        if (m != n) return false;
         // Todo vértice debe tener grado exactamente 2
         for (Set<String> vec : ady.values()) {
-            if (vec.size() != 2) {
-                return false;
-            }
+            if (vec.size() != 2) return false;
         }
         return true;
     }
@@ -281,9 +234,7 @@ public class Coloreado {
     }
 
     private static boolean esConexo(Map<String, Set<String>> ady, List<String> vertices) {
-        if (vertices.isEmpty()) {
-            return true;
-        }
+        if (vertices.isEmpty()) return true;
         Set<String> visitados = new HashSet<>();
         Queue<String> cola = new LinkedList<>();
         cola.add(vertices.get(0));
@@ -303,11 +254,12 @@ public class Coloreado {
     // =========================================================
     //  POLINOMIO GENERAL — CONTRACCIÓN/ELIMINACIÓN
     // =========================================================
+
     /**
      * Calcula los coeficientes del polinomio cromático por
-     * contracción-eliminación recursiva. Representamos el grafo como mapa
-     * String→Set<String>. Devuelve array de coeficientes: coefs[i] es el coef.
-     * de λ^i.
+     * contracción-eliminación recursiva.
+     * Representamos el grafo como mapa String→Set<String>.
+     * Devuelve array de coeficientes: coefs[i] es el coef. de λ^i.
      */
     private static long[] calcularCoeficientesGeneral(
             Map<String, Set<String>> ady, List<String> vertices) {
@@ -323,8 +275,8 @@ public class Coloreado {
     }
 
     /**
-     * Evalúa P(G, lambda) directamente por contracción-eliminación. Si lambda =
-     * 0 → retorna 0.
+     * Evalúa P(G, lambda) directamente por contracción-eliminación.
+     * Si lambda = 0 → retorna 0.
      */
     private static long evaluarContraccionEliminacion(
             Map<String, Set<String>> ady, int lambda) {
@@ -350,11 +302,9 @@ public class Coloreado {
                 - evaluarContraccionEliminacion(gContraido, lambda);
     }
 
-    /**
-     * Fusiona vértice v en u y elimina v del grafo.
-     */
+    /** Fusiona vértice v en u y elimina v del grafo. */
     private static void contraerArista(Map<String, Set<String>> ady,
-            String u, String v) {
+                                        String u, String v) {
         // Los vecinos de v pasan a ser vecinos de u (excepto u mismo)
         Set<String> vecinosV = ady.getOrDefault(v, new HashSet<>());
         for (String w : vecinosV) {
@@ -368,10 +318,7 @@ public class Coloreado {
         ady.remove(v);
     }
 
-    /**
-     * Interpolación de Newton para obtener coeficientes a partir de valores en
-     * 0,1,...,n
-     */
+    /** Interpolación de Newton para obtener coeficientes a partir de valores en 0,1,...,n */
     private static long[] interpolacionNewton(long[] y) {
         int n = y.length;
         long[] delta = Arrays.copyOf(y, n);
@@ -391,9 +338,7 @@ public class Coloreado {
         long[] resultado = new long[n];
         for (int k = 0; k < n; k++) {
             long dk = tabla[k][0];
-            if (dk == 0) {
-                continue;
-            }
+            if (dk == 0) continue;
             // C(x,k) expandido: coeficientes del polinomio x*(x-1)*...*(x-k+1)/k!
             long[] stirling = stirlingAscendente(k);
             long fact = factorial(k);
@@ -404,9 +349,7 @@ public class Coloreado {
         return resultado;
     }
 
-    /**
-     * Polinomio x(x-1)(x-2)···(x-k+1) como array de coeficientes
-     */
+    /** Polinomio x(x-1)(x-2)···(x-k+1) como array de coeficientes */
     private static long[] stirlingAscendente(int k) {
         long[] poly = new long[k + 1];
         poly[0] = 1;
@@ -424,9 +367,7 @@ public class Coloreado {
 
     private static long factorial(int n) {
         long r = 1;
-        for (int i = 2; i <= n; i++) {
-            r *= i;
-        }
+        for (int i = 2; i <= n; i++) r *= i;
         return r;
     }
 
@@ -446,9 +387,7 @@ public class Coloreado {
         boolean primero = true;
         for (int i = coefs.length - 1; i >= 0; i--) {
             long c = coefs[i];
-            if (c == 0) {
-                continue;
-            }
+            if (c == 0) continue;
             if (!primero) {
                 sb.append(c > 0 ? " + " : " - ");
                 c = Math.abs(c);
@@ -471,8 +410,9 @@ public class Coloreado {
     // =========================================================
     //  GREEDY — VÉRTICES
     // =========================================================
+
     private static int[] greedy(List<String> vertices,
-            Map<String, Set<String>> ady) {
+                                 Map<String, Set<String>> ady) {
         int n = vertices.size();
         int[] resultado = new int[n];
         Arrays.fill(resultado, -1);
@@ -499,22 +439,16 @@ public class Coloreado {
         return resultado;
     }
 
-    /**
-     * Genera TODAS las coloraciones válidas con exactamente k colores.
-     */
+    /** Genera TODAS las coloraciones válidas con exactamente k colores. */
     private static void generarFormasVertices(List<String> vertices,
-            Map<String, Set<String>> ady,
-            int[] actual, int pos, int k,
-            List<int[]> formas) {
-        if (formas.size() >= MAX_FORMAS) {
-            return;
-        }
+                                               Map<String, Set<String>> ady,
+                                               int[] actual, int pos, int k,
+                                               List<int[]> formas) {
+        if (formas.size() >= MAX_FORMAS) return;
         if (pos == vertices.size()) {
             // Verificar que usa exactamente k colores
             Set<Integer> usados = new HashSet<>();
-            for (int c : actual) {
-                usados.add(c);
-            }
+            for (int c : actual) usados.add(c);
             if (usados.size() == k) {
                 formas.add(Arrays.copyOf(actual, actual.length));
             }
@@ -532,9 +466,7 @@ public class Coloreado {
             if (!prohibidos.contains(c)) {
                 actual[pos] = c;
                 generarFormasVertices(vertices, ady, actual, pos + 1, k, formas);
-                if (formas.size() >= MAX_FORMAS) {
-                    return;
-                }
+                if (formas.size() >= MAX_FORMAS) return;
             }
         }
         actual[pos] = -1;
@@ -543,9 +475,10 @@ public class Coloreado {
     // =========================================================
     //  GREEDY — ARISTAS
     // =========================================================
+
     private static int[] greedyAristas(List<String[]> aristas,
-            List<String> vertices,
-            Map<String, Set<String>> ady) {
+                                        List<String> vertices,
+                                        Map<String, Set<String>> ady) {
         int m = aristas.size();
         int[] resultado = new int[m];
         Arrays.fill(resultado, -1);
@@ -557,9 +490,7 @@ public class Coloreado {
             Set<Integer> prohibidos = new HashSet<>();
             // Aristas adyacentes = aristas que comparten vértice con (u,v)
             for (int j = 0; j < i; j++) {
-                if (resultado[j] == -1) {
-                    continue;
-                }
+                if (resultado[j] == -1) continue;
                 String a = aristas.get(j)[0], b = aristas.get(j)[1];
                 if (a.equals(u) || b.equals(u) || a.equals(v) || b.equals(v)) {
                     prohibidos.add(resultado[j]);
@@ -575,23 +506,16 @@ public class Coloreado {
         return resultado;
     }
 
-    /**
-     * Genera TODAS las coloraciones de aristas válidas con exactamente k
-     * colores.
-     */
+    /** Genera TODAS las coloraciones de aristas válidas con exactamente k colores. */
     private static void generarFormasAristas(List<String[]> aristas,
-            List<String> vertices,
-            Map<String, Set<String>> ady,
-            int[] actual, int pos, int k,
-            List<int[]> formas) {
-        if (formas.size() >= MAX_FORMAS) {
-            return;
-        }
+                                              List<String> vertices,
+                                              Map<String, Set<String>> ady,
+                                              int[] actual, int pos, int k,
+                                              List<int[]> formas) {
+        if (formas.size() >= MAX_FORMAS) return;
         if (pos == aristas.size()) {
             Set<Integer> usados = new HashSet<>();
-            for (int c : actual) {
-                usados.add(c);
-            }
+            for (int c : actual) usados.add(c);
             if (usados.size() == k) {
                 formas.add(Arrays.copyOf(actual, actual.length));
             }
@@ -601,9 +525,7 @@ public class Coloreado {
         String v = aristas.get(pos)[1];
         Set<Integer> prohibidos = new HashSet<>();
         for (int j = 0; j < pos; j++) {
-            if (actual[j] == -1) {
-                continue;
-            }
+            if (actual[j] == -1) continue;
             String a = aristas.get(j)[0], b = aristas.get(j)[1];
             if (a.equals(u) || b.equals(u) || a.equals(v) || b.equals(v)) {
                 prohibidos.add(actual[j]);
@@ -613,9 +535,7 @@ public class Coloreado {
             if (!prohibidos.contains(c)) {
                 actual[pos] = c;
                 generarFormasAristas(aristas, vertices, ady, actual, pos + 1, k, formas);
-                if (formas.size() >= MAX_FORMAS) {
-                    return;
-                }
+                if (formas.size() >= MAX_FORMAS) return;
             }
         }
         actual[pos] = -1;
@@ -624,15 +544,12 @@ public class Coloreado {
     // =========================================================
     //  UTILIDADES INTERNAS
     // =========================================================
-    /**
-     * Construye mapa de adyacencia desde el Grafo.
-     */
+
+    /** Construye mapa de adyacencia desde el Grafo. */
     private static Map<String, Set<String>> construirAdyacencia(
             Grafo grafo, List<String> vertices) {
         Map<String, Set<String>> ady = new LinkedHashMap<>();
-        for (String v : vertices) {
-            ady.put(v, new LinkedHashSet<>());
-        }
+        for (String v : vertices) ady.put(v, new LinkedHashSet<>());
         for (String v : vertices) {
             List<String> vecinos = grafo.getVecinos(v);
             if (vecinos != null) {
@@ -644,19 +561,15 @@ public class Coloreado {
         return ady;
     }
 
-    /**
-     * Obtiene lista de aristas sin duplicados (u < v lexicográfico).
-     */
+    /** Obtiene lista de aristas sin duplicados (u < v lexicográfico). */
     private static List<String[]> obtenerAristas(Map<String, Set<String>> ady,
-            List<String> vertices) {
+                                                   List<String> vertices) {
         Set<String> vistas = new LinkedHashSet<>();
         List<String[]> aristas = new ArrayList<>();
         for (String u : vertices) {
             for (String v : ady.getOrDefault(u, Collections.emptySet())) {
                 String key = u.compareTo(v) < 0 ? u + "-" + v : v + "-" + u;
-                if (vistas.add(key)) {
-                    aristas.add(new String[]{u, v});
-                }
+                if (vistas.add(key)) aristas.add(new String[]{u, v});
             }
         }
         return aristas;
@@ -668,9 +581,7 @@ public class Coloreado {
         for (String u : ady.keySet()) {
             for (String v : ady.getOrDefault(u, Collections.emptySet())) {
                 String key = u.compareTo(v) < 0 ? u + "|" + v : v + "|" + u;
-                if (vistas.add(key)) {
-                    aristas.add(new String[]{u, v});
-                }
+                if (vistas.add(key)) aristas.add(new String[]{u, v});
             }
         }
         return aristas;
@@ -686,26 +597,20 @@ public class Coloreado {
 
     private static int calcularNumeroCromatico(Map<Integer, Long> evaluaciones) {
         for (Map.Entry<Integer, Long> e : evaluaciones.entrySet()) {
-            if (e.getValue() > 0) {
-                return e.getKey();
-            }
+            if (e.getValue() > 0) return e.getKey();
         }
         return evaluaciones.keySet().stream().mapToInt(i -> i).min().orElse(1);
     }
 
     private static long potenciaLong(long base, int exp) {
         long r = 1;
-        for (int i = 0; i < exp; i++) {
-            r *= base;
-        }
+        for (int i = 0; i < exp; i++) r *= base;
         return r;
     }
 
     private static Map<String, Integer> arrayAMapa(List<String> vertices, int[] arr) {
         Map<String, Integer> m = new LinkedHashMap<>();
-        for (int i = 0; i < vertices.size(); i++) {
-            m.put(vertices.get(i), arr[i]);
-        }
+        for (int i = 0; i < vertices.size(); i++) m.put(vertices.get(i), arr[i]);
         return m;
     }
 
